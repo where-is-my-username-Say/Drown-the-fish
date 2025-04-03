@@ -5,64 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Minecraft Photo Hunt</title>
   <link href="style.css" rel="stylesheet" type="text/css">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ff5722">
 </head>
 <body>
   <div id="minecraft-background">
     <video autoplay muted loop>
       <source src="BGV.mp4" type="video/mp4">
-      Your browser does not support the video tag.
     </video>
   </div>
-  
+
+  <div id="language-switcher">
+    <button id="language-button">العربية</button>
+  </div>
+
   <div id="game-container">
+    <div id="welcome-message">Welcome to the site!</div>
+    <a id="donate-button" href="https://tip.dokan.sa/zookoomaan_2004869" target="_blank">Donate</a>
+
     <div id="photo-container">
-      <img id="photo-image" src="fish.jpg" alt="Photo of a fish">
+      <img id="photo-image" src="fish.jpg" alt="Clickable Photo">
       <div id="photo-hp">HP: 50</div>
     </div>
-    
-    <div id="player-stats">
-      <div id="click-damage">Click Damage: 2</div>
-      <div id="gold">Gold: 0</div>
+
+    <div id="stats-container">
+      <div class="stat-row">
+        <span>Damage:</span>
+        <span id="click-damage">2</span>
+      </div>
+      <div class="stat-row">
+        <span>Gold:</span>
+        <span id="gold">0</span>
+      </div>
+      <div class="stat-row">
+        <span>Crit Chance:</span>
+        <span id="crit-chance">10%</span>
+      </div>
+      <div class="stat-row">
+        <span>Crit Multiplier:</span>
+        <span id="crit-multiplier">2x</span>
+      </div>
     </div>
-    
-    <button id="upgrade-button" aria-label="Upgrade Click">Upgrade Click (2 Gold)</button>
-    <button id="fullscreen-button" aria-label="Fullscreen">Fullscreen</button>
-    <button id="restart-button" aria-label="Restart Game">Restart Game</button>
-    <div id="restart-counter">Restart Countdown: 10</div>
+
+    <div id="buttons-grid">
+      <button id="upgrade-button" class="btn upgrade-btn">Upgrade (2 Gold)</button>
+      <button id="crit-chance-button" class="btn upgrade-btn">Crit Chance (10 Gold)</button>
+      <button id="crit-damage-button" class="btn upgrade-btn">Crit Damage (10 Gold)</button>
+      <button id="auto-clicker-button" class="btn auto-clicker-btn">Auto-Clicker (50 Gold)</button>
+      <button id="auto-clicker-dmg-button" class="btn auto-clicker-btn">AC Damage (25 Gold)</button>
+      <button id="auto-clicker-speed-button" class="btn auto-clicker-btn">AC Speed (30 Gold)</button>
+      <button id="fullscreen-button" class="btn utility-btn">Fullscreen</button>
+      <button id="mute-music-button" class="btn utility-btn">Toggle Music</button>
+      <button id="mute-sound-button" class="btn utility-btn">Toggle Sound</button>
+      <button id="restart-button" class="btn restart-btn">Restart</button>
+    </div>
   </div>
-  
+
   <div id="message-display"></div>
-  <div id="damage-display"></div>
-  
-  <audio id="damage-sound" src="dmg.mp3"></audio>
-  <audio id="bg-music" src="BG.mp3" loop></audio>
-  
+
+  <audio id="damage-sound" src="dmg.mp3" preload="auto"></audio>
+  <audio id="bg-music" src="BG.mp3" loop preload="auto"></audio>
+
   <script src="script.js"></script>
-  <script>
-    // Register the service worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(registration => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          })
-          .catch(error => {
-            console.log('ServiceWorker registration failed: ', error);
-          });
-      });
-    }
-
-    // Fullscreen button functionality
-    const fullscreenButton = document.getElementById('fullscreen-button');
-
-    fullscreenButton.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    });
-  </script>
 </body>
-</html>
+</html> 
