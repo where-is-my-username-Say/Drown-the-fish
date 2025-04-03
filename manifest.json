@@ -1,22 +1,23 @@
 {
-  "name": "My Awesome Game",
-  "short_name": "AwesomeGame",
-  "description": "An exciting and fun game to play.",
+  "name": "Minecraft Photo Hunt",
+  "short_name": "PhotoHunt",
+  "description": "لعبة صيد الصور في ماينكرافت",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ff5722",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ],
-  "scope": "/"
+  ]
 }
