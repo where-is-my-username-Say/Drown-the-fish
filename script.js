@@ -1,245 +1,502 @@
-// Initial game state
-let initialHP = 50; // Start with an initial HP of 50
-let photoHP = initialHP; // Set photoHP to initialHP at the start
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log('Service Worker registered'))
+      .catch(err => console.log('Registration failed:', err));
+  });
+}
+// Game State
+let initialHP = 50;
+let photoHP = initialHP;
 let clickDamage = 2;
 let gold = 0;
-let restartCounter = 10; // Counter for restart button
-let hpIncrement = 25; // HP increment per defeat
-let upgradeCount = 0; // Track the number of upgrades
-let clickCounter = 0; // Track the number of clicks for restart
-let photoDefeated = false; // Track if the photo has been defeated
-let hpBeforeClick = 0; // Store HP value before the click
+let restartCounter = 10;
+let hpIncrement = 25;
+let upgradeCount = 0;
+let clickCounter = 0;
+let photoDefeated = false;
+let totalClicks = 0;
+let totalDamage = 0;
+let totalGoldEarned = 0;
+let critChance = 0.1;
+let critMultiplier = 2;
+let autoClickerActive = false;
+let autoClickerInterval;
+let autoClickerDamage = 0;
+let autoClickerCost = 50;
+let autoClickerSpeed = 1000;
+let autoClickerLevel = 0;
+let autoClickerSpeedCost = 30;
+let autoClickerDamageCost = 25;
+let critChanceCost = 10;
+let critDamageCost = 10;
+let musicMuted = false;
+let soundMuted = false;
+let critHits = 0;
+let currentLanguage = 'en';
 
-// Anti-auto-clicker variables
-const MAX_CLICKS_PER_SECOND = 20; // Maximum allowed clicks per second
-const CLICK_INTERVAL = 1000; // Time window for counting clicks (in milliseconds)
-let clickTimestamps = []; // Array to store click timestamps
-
-// Get HTML elements
-const photoImage = document.getElementById('photo-image');
-const photoHPDisplay = document.getElementById('photo-hp');
-const clickDamageDisplay = document.getElementById('click-damage');
-const goldDisplay = document.getElementById('gold');
-const upgradeButton = document.getElementById('upgrade-button');
-const fullscreenButton = document.getElementById('fullscreen-button');
-const restartButton = document.getElementById('restart-button');
-const restartCounterDisplay = document.getElementById('restart-counter');
-const messageDisplay = document.getElementById('message-display');
-const damageSound = document.getElementById('damage-sound'); // Get damage sound element
-const bgMusic = document.getElementById('bg-music'); // Get background music element
-
-// Function to update displays
-function updateDisplays() {
-  photoHPDisplay.textContent = `HP: ${photoHP}`;
-  clickDamageDisplay.textContent = `Click Damage: ${clickDamage}`;
-  goldDisplay.textContent = `Gold: ${gold}`;
-
-  // Update upgrade button text
-  const upgradeCost = getUpgradeCost();
-  upgradeButton.textContent = `Upgrade Click (${upgradeCost} Gold)`;
-
-  // Show or hide restart button and counter based on photo HP and defeat status
-  if (photoDefeated && photoHP >= 10000) {
-    restartButton.style.display = 'block';
-    restartCounterDisplay.style.display = 'none'; // Hide the restart counter
-  } else if (photoHP >= 10000) {
-    photoImage.src = 'path/to/MD.png'; // Change photo to MD.png
-    photoHP = 0; // Set HP to 0
-    showMessage('Congratulations! You have reached 10,000 HP and won the game!');
-    restartButton.style.display = 'block';
-    restartCounterDisplay.style.display = 'none'; // Hide the restart counter
-  } else {
-    restartButton.style.display = 'none';
-    restartCounterDisplay.style.display = 'none'; // Hide the restart counter
+// Translations
+const translations = {
+  en: {
+    welcome: "Welcome to the site!",
+    damage: "Damage:",
+    gold: "Gold:",
+    critChance: "Crit Chance:",
+    critMultiplier: "Crit Multiplier:",
+    upgrade: "Upgrade",
+    critChanceUpgrade: "Crit Chance",
+    critDamageUpgrade: "Crit Damage",
+    autoClicker: "Auto-Clicker",
+    acDamage: "AC Damage",
+    acSpeed: "AC Speed",
+    fullscreen: "Fullscreen",
+    toggleMusic: "Toggle Music",
+    toggleSound: "Toggle Sound",
+    restart: "Restart",
+    donate: "Donate",
+    language: "العربية"
+  },
+  ar: {
+    welcome: "نورت يا معاق!",
+    damage: "الدمج:",
+    gold: "قطع ذهبية:",
+    critChance: "الكريت ريت :",
+    critMultiplier: "الكريت دمج",
+    upgrade: "تطوير",
+    critChanceUpgrade: " الكريت ريت",
+    critDamageUpgrade: " الكريت دمج",
+    autoClicker: " اوتو كليكر",
+    acDamage: "دمج الاوتو كليكر",
+    acSpeed: " سرعة الأوتو كلكير",
+    fullscreen: "فول سكرين مية مية ",
+    toggleMusic: "تشغيل/إيقاف الموسيقى",
+    toggleSound: "تشغيل/إيقاف الصوت",
+    restart: "إعادة البدأ",
+    donate: "تبرع",
+    language: "English"
   }
-}
+};
 
-// Function to show in-game messages
-function showMessage(text) {
-  messageDisplay.textContent = text;
-  messageDisplay.style.opacity = '1';
-  setTimeout(() => {
-    messageDisplay.style.opacity = '0';
-  }, 2000); // Display for 2 seconds
-}
+// DOM Elements
+const elements = {
+  photoImage: document.getElementById('photo-image'),
+  photoHP: document.getElementById('photo-hp'),
+  clickDamage: document.getElementById('click-damage'),
+  gold: document.getElementById('gold'),
+  upgradeButton: document.getElementById('upgrade-button'),
+  critChanceButton: document.getElementById('crit-chance-button'),
+  critDamageButton: document.getElementById('crit-damage-button'),
+  autoClickerButton: document.getElementById('auto-clicker-button'),
+  autoClickerDmgButton: document.getElementById('auto-clicker-dmg-button'),
+  autoClickerSpeedButton: document.getElementById('auto-clicker-speed-button'),
+  fullscreenButton: document.getElementById('fullscreen-button'),
+  muteMusicButton: document.getElementById('mute-music-button'),
+  muteSoundButton: document.getElementById('mute-sound-button'),
+  restartButton: document.getElementById('restart-button'),
+  damageSound: document.getElementById('damage-sound'),
+  bgMusic: document.getElementById('bg-music'),
+  languageButton: document.getElementById('language-button'),
+  welcomeMessage: document.getElementById('welcome-message'),
+  donateButton: document.getElementById('donate-button'),
+  critChance: document.getElementById('crit-chance'),
+  critMultiplier: document.getElementById('crit-multiplier'),
+  messageDisplay: document.getElementById('message-display')
+};
 
-// Function to determine gold earned based on the initial HP value
-function getGoldReward(initialHP) {
-  if (initialHP >= 7500) {
-    return 150;
-  } else if (initialHP >= 5000) {
-    return 100;
-  } else if (initialHP >= 2500) {
-    return 50;
-  } else if (initialHP >= 1000) {
-    return 25;
-  } else if (initialHP >= 500) {
-    return 10;
-  } else if (initialHP >= 100) {
-    return 5;
-  }
-  return 2; // Default reward if initialHP is less than 100
-}
-
-// Function to handle photo defeat
-function handlePhotoDefeat() {
-  // Calculate reward based on the initial HP value
-  const goldReward = getGoldReward(initialHP);
-  console.log(`photoHP at defeat: ${initialHP}`); // Debugging line
-  console.log(`Gold Reward: ${goldReward}`); // Debugging line
-  gold += goldReward;
-
-  showMessage(`You've defeated the enemy! You earned ${goldReward} gold.`);
-
-  // Increase HP for the next level
-  initialHP += hpIncrement; // Increase the initial HP by the increment value
-  photoHP = initialHP; // Set photo HP to the new initial HP value
-
-  // Check if photoHP is at least 10,000
-  if (photoHP >= 10000) {
-    photoDefeated = true; // Set the defeated flag to true
-  }
-
-  // Adjust the hpIncrement based on initialHP
-  if (initialHP >= 7500) {
-    hpIncrement = 500;
-  } else if (initialHP >= 5000) {
-    hpIncrement = 500;
-  } else if (initialHP >= 2500) {
-    hpIncrement = 250;
-  } else if (initialHP >= 1000) {
-    hpIncrement = 100;
-  } else if (initialHP >= 500) {
-    hpIncrement = 50;
-  }
-
-  updateDisplays(); // Update displays to reflect the new state
-}
-
-// Function to restart the game
-function restartGame() {
-  initialHP = 50; // Reset initial HP to its original value
-  photoHP = initialHP; // Reset HP to the initial value
-  clickDamage = 2; // Reset damage to base value
-  gold = 0; // Reset gold
-  restartCounter = 10; // Reset restart counter
-  restartButton.disabled = true; // Disable the restart button again
-  upgradeCount = 0; // Reset the upgrade count
-  clickCounter = 0; // Reset the click counter
-  photoDefeated = false; // Reset the defeated flag
-  hpIncrement = 25; // Reset the HP increment
-
-  showMessage('Game restarted!');
+// Initialize game
+function initGame() {
   updateDisplays();
+  updateLanguage();
+  initEventListeners();
+  elements.restartButton.style.display = 'none';
+  
+  // Initialize audio
+  elements.bgMusic.volume = 0.3;
+  document.addEventListener('click', function initAudio() {
+    elements.bgMusic.play().catch(console.error);
+    document.removeEventListener('click', initAudio);
+  }, { once: true });
 }
 
-// Function to get the cost of the next upgrade
-function getUpgradeCost() {
-  return 2 + upgradeCount; // Upgrade cost increases by 1 each time
+// Update all displays
+function updateDisplays() {
+  elements.photoHP.textContent = `HP: ${photoHP}`;
+  elements.clickDamage.textContent = `${translations[currentLanguage].damage} ${clickDamage}`;
+  elements.gold.textContent = `${translations[currentLanguage].gold} ${gold}`;
+  elements.critChance.textContent = `${translations[currentLanguage].critChance} ${Math.round(critChance * 100)}%`;
+  elements.critMultiplier.textContent = `${translations[currentLanguage].critMultiplier} ${critMultiplier}x`;
+
+  const upgradeCost = getUpgradeCost();
+  elements.upgradeButton.textContent = `${translations[currentLanguage].upgrade} (${upgradeCost} ${translations[currentLanguage].gold})`;
+  elements.autoClickerButton.textContent = `${translations[currentLanguage].autoClicker} (${autoClickerCost} ${translations[currentLanguage].gold})`;
+  elements.autoClickerButton.disabled = autoClickerActive || gold < autoClickerCost;
+
+  elements.critChanceButton.textContent = `${translations[currentLanguage].critChanceUpgrade} (${critChanceCost} ${translations[currentLanguage].gold})`;
+  elements.critDamageButton.textContent = `${translations[currentLanguage].critDamageUpgrade} (${critDamageCost} ${translations[currentLanguage].gold})`;
+  elements.autoClickerDmgButton.textContent = `${translations[currentLanguage].acDamage} (${autoClickerDamageCost} ${translations[currentLanguage].gold})`;
+  elements.autoClickerSpeedButton.textContent = `${translations[currentLanguage].acSpeed} (${autoClickerSpeedCost} ${translations[currentLanguage].gold})`;
+
+  elements.muteMusicButton.textContent = musicMuted ? 
+    translations[currentLanguage].toggleMusic.replace("Toggle", "Unmute") : 
+    translations[currentLanguage].toggleMusic;
+
+  elements.muteSoundButton.textContent = soundMuted ? 
+    translations[currentLanguage].toggleSound.replace("Toggle", "Unmute") : 
+    translations[currentLanguage].toggleSound;
 }
 
-// Function to create and display damage number
-function showDamageNumber(x, y, damage) {
-  const damageDisplay = document.createElement('div');
-  damageDisplay.textContent = `-${damage}`;
-  damageDisplay.className = 'damage-display'; // Apply CSS class for damage display
-  damageDisplay.style.left = `${x}px`;
-  damageDisplay.style.top = `${y}px`;
-  document.getElementById('photo-container').appendChild(damageDisplay);
-
-  // Remove the damage display after 1 second
-  setTimeout(() => {
-    damageDisplay.remove();
-  }, 1000); // Display for 1 second
-}
-
-// Click event on photo image
-photoImage.addEventListener('click', (event) => {
-  // Anti-auto-clicker logic
-  const now = Date.now();
-  clickTimestamps.push(now);
-
-  // Remove timestamps older than CLICK_INTERVAL
-  clickTimestamps = clickTimestamps.filter(timestamp => now - timestamp <= CLICK_INTERVAL);
-
-  // Check if click limit exceeded
-  if (clickTimestamps.length > MAX_CLICKS_PER_SECOND) {
-    return; // Ignore this click
-  }
-
-  // Store HP value before processing the click
-  hpBeforeClick = photoHP;
-
-  // Calculate the position for damage display
-  const rect = photoImage.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-
-  // Reduce HP by click damage
-  photoHP -= clickDamage;
-
-  // Show damage number
-  showDamageNumber(x, y, clickDamage);
-
-  // Play damage sound
-  damageSound.currentTime = 0; // Reset the playback position
-  damageSound.play().catch(error => {
-    console.error('Damage sound failed to play:', error);
+// Initialize event listeners
+function initEventListeners() {
+  // Photo click
+  elements.photoImage.addEventListener('click', function(event) {
+    if (photoDefeated) return;
+    
+    totalClicks++;
+    let damage = clickDamage;
+    let isCrit = Math.random() < critChance;
+    
+    if (isCrit) {
+      damage = Math.floor(damage * critMultiplier);
+      critHits++;
+    }
+    
+    photoHP -= damage;
+    totalDamage += damage;
+    
+    if (photoHP <= 0) {
+      photoHP = 0;
+      photoDefeated = true;
+      const goldEarned = Math.floor(initialHP / 2);
+      gold += goldEarned;
+      totalGoldEarned += goldEarned;
+      showMessage(currentLanguage === 'en' ? `You earned ${goldEarned} gold!` : `لقد ربحت ${goldEarned} ذهب!`);
+      
+      setTimeout(() => {
+        initialHP += hpIncrement;
+        photoHP = initialHP;
+        photoDefeated = false;
+        updateDisplays();
+      }, 2000);
+    }
+    
+    // Show damage at click position
+    showDamage(damage, isCrit, event);
+    
+    // Play sound
+    if (!soundMuted) {
+      elements.damageSound.currentTime = 0;
+      elements.damageSound.play().catch(e => console.log("Audio play error:", e));
+    }
+    
+    // Shake animation
+    elements.photoImage.classList.add('shake');
+    setTimeout(() => {
+      elements.photoImage.classList.remove('shake');
+    }, 600);
+    
+    updateDisplays();
   });
 
-  // Shake animation on hit
-  photoImage.classList.add('shake');
+  // Buttons
+  elements.upgradeButton.addEventListener('click', function() {
+    const cost = getUpgradeCost();
+    if (gold >= cost) {
+      gold -= cost;
+      clickDamage += 1;
+      upgradeCount++;
+      updateDisplays();
+    }
+  });
+
+  elements.critChanceButton.addEventListener('click', function() {
+    if (gold >= critChanceCost) {
+      gold -= critChanceCost;
+      critChance += 0.05;
+      critChanceCost = Math.floor(critChanceCost * 1.5);
+      updateDisplays();
+    }
+  });
+
+  elements.critDamageButton.addEventListener('click', function() {
+    if (gold >= critDamageCost) {
+      gold -= critDamageCost;
+      critMultiplier += 0.2;
+      critDamageCost = Math.floor(critDamageCost * 1.5);
+      updateDisplays();
+    }
+  });
+
+  elements.autoClickerButton.addEventListener('click', function() {
+    if (!autoClickerActive && gold >= autoClickerCost) {
+      gold -= autoClickerCost;
+      autoClickerActive = true;
+      autoClickerDamage = 1;
+      autoClickerInterval = setInterval(function() {
+        if (!photoDefeated) {
+          photoHP -= autoClickerDamage;
+          totalDamage += autoClickerDamage;
+          
+          if (photoHP <= 0) {
+            photoHP = 0;
+            photoDefeated = true;
+            const goldEarned = Math.floor(initialHP / 2);
+            gold += goldEarned;
+            totalGoldEarned += goldEarned;
+            
+            setTimeout(() => {
+              initialHP += hpIncrement;
+              photoHP = initialHP;
+              photoDefeated = false;
+            }, 2000);
+          }
+          updateDisplays();
+        }
+      }, autoClickerSpeed);
+      updateDisplays();
+    }
+  });
+
+  elements.autoClickerDmgButton.addEventListener('click', function() {
+    if (gold >= autoClickerDamageCost) {
+      gold -= autoClickerDamageCost;
+      autoClickerDamage += 1;
+      autoClickerDamageCost = Math.floor(autoClickerDamageCost * 1.3);
+      updateDisplays();
+    }
+  });
+
+  elements.autoClickerSpeedButton.addEventListener('click', function() {
+    if (gold >= autoClickerSpeedCost) {
+      gold -= autoClickerSpeedCost;
+      autoClickerSpeed = Math.max(200, autoClickerSpeed - 100);
+      clearInterval(autoClickerInterval);
+      autoClickerInterval = setInterval(function() {
+        if (!photoDefeated) {
+          photoHP -= autoClickerDamage;
+          totalDamage += autoClickerDamage;
+          
+          if (photoHP <= 0) {
+            photoHP = 0;
+            photoDefeated = true;
+            const goldEarned = Math.floor(initialHP / 2);
+            gold += goldEarned;
+            totalGoldEarned += goldEarned;
+            
+            setTimeout(() => {
+              initialHP += hpIncrement;
+              photoHP = initialHP;
+              photoDefeated = false;
+            }, 2000);
+          }
+          updateDisplays();
+        }
+      }, autoClickerSpeed);
+      autoClickerSpeedCost = Math.floor(autoClickerSpeedCost * 1.4);
+      updateDisplays();
+    }
+  });
+
+  elements.fullscreenButton.addEventListener('click', function() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  });
+
+  elements.muteMusicButton.addEventListener('click', function() {
+    musicMuted = !musicMuted;
+    elements.bgMusic.muted = musicMuted;
+    updateDisplays();
+  });
+
+  elements.muteSoundButton.addEventListener('click', function() {
+    soundMuted = !soundMuted;
+    updateDisplays();
+  });
+
+  elements.restartButton.addEventListener('click', function() {
+    if (confirm(currentLanguage === 'en' ? 'Are you sure you want to restart?' : 'هل أنت متأكد أنك تريد إعادة التشغيل؟')) {
+      // Reset all game state variables
+      initialHP = 50;
+      photoHP = initialHP;
+      clickDamage = 2;
+      gold = 0;
+      restartCounter = 10;
+      hpIncrement = 25;
+      upgradeCount = 0;
+      clickCounter = 0;
+      photoDefeated = false;
+      totalClicks = 0;
+      totalDamage = 0;
+      totalGoldEarned = 0;
+      critChance = 0.1;
+      critMultiplier = 2;
+      autoClickerActive = false;
+      autoClickerDamage = 0;
+      autoClickerCost = 50;
+      autoClickerSpeed = 1000;
+      autoClickerLevel = 0;
+      autoClickerSpeedCost = 30;
+      autoClickerDamageCost = 25;
+      critChanceCost = 10;
+      critDamageCost = 10;
+      critHits = 0;
+      
+      clearInterval(autoClickerInterval);
+      elements.photoImage.src = 'fish.jpg';
+      updateDisplays();
+    }
+  });
+
+  elements.languageButton.addEventListener('click', function() {
+    currentLanguage = currentLanguage === 'en' ? 'ar' : 'en';
+    updateLanguage();
+  });
+}
+
+// Helper functions
+function getUpgradeCost() {
+  return Math.floor(2 + upgradeCount * 1.5);
+}
+
+function showDamage(damage, isCrit, event) {
+  const damageElement = document.createElement('div');
+  damageElement.className = 'damage-display';
+  if (isCrit) damageElement.classList.add('crit-damage');
+  damageElement.textContent = `-${damage}`;
+  
+  // Position at click location
+  damageElement.style.position = 'fixed';
+  damageElement.style.left = `${event.clientX}px`;
+  damageElement.style.top = `${event.clientY}px`;
+  damageElement.style.transform = 'translate(-50%, -50%)';
+  
+  document.body.appendChild(damageElement);
+  
   setTimeout(() => {
-    photoImage.classList.remove('shake');
-  }, 600);
+    damageElement.remove();
+  }, 800);
+}
 
-  // Check if HP is zero or less
-  if (photoHP <= 0) {
-    photoHP = 0; // Prevent negative HP
-    handlePhotoDefeat(); // Handle photo defeat
-  }
+function showMessage(message) {
+  elements.messageDisplay.textContent = message;
+  elements.messageDisplay.style.opacity = 1;
+  
+  setTimeout(() => {
+    elements.messageDisplay.style.opacity = 0;
+  }, 3000);
+}
 
+function updateLanguage() {
+  const lang = translations[currentLanguage];
+  elements.welcomeMessage.textContent = lang.welcome;
+  elements.donateButton.textContent = lang.donate;
+  elements.languageButton.textContent = lang.language;
+  document.documentElement.lang = currentLanguage;
+  document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
   updateDisplays();
+}
+
+// Start the game
+initGame();
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // منع المتصفح من عرض رسالة التثبيت التلقائية
+  e.preventDefault();
+  // حفظ الحدث لاستخدامه لاحقاً
+  deferredPrompt = e;
+  
+  // عرض زر التثبيت الخاص بك
+  const installButton = document.createElement('button');
+  installButton.id = 'install-button';
+  installButton.textContent = 'Install App';
+  installButton.style.position = 'fixed';
+  installButton.style.bottom = '20px';
+  installButton.style.right = '20px';
+  installButton.style.zIndex = '1000';
+  installButton.style.padding = '10px 20px';
+  installButton.style.backgroundColor = '#ff5722';
+  installButton.style.color = 'white';
+  installButton.style.border = 'none';
+  installButton.style.borderRadius = '5px';
+  installButton.style.cursor = 'pointer';
+  
+  document.body.appendChild(installButton);
+  
+  installButton.addEventListener('click', () => {
+    // عرض رسالة التثبيت
+    deferredPrompt.prompt();
+    // الانتظار حتى يقرر المستخدم
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted install');
+      } else {
+        console.log('User dismissed install');
+      }
+      deferredPrompt = null;
+      // إزالة زر التثبيت بعد الاستخدام
+      installButton.remove();
+    });
+  });
 });
 
-// Upgrade button functionality
-upgradeButton.addEventListener('click', () => {
-  const upgradeCost = getUpgradeCost();
-  if (gold >= upgradeCost) {
-    gold -= upgradeCost;
-    clickDamage += 1;
-    upgradeCount++;
-    showMessage('Upgrade successful!');
-    updateDisplays();
-  } else {
-    showMessage('Not enough gold for upgrade!');
+window.addEventListener('appinstalled', () => {
+  console.log('App installed successfully');
+  // يمكنك إزالة زر التثبيت هنا إذا كان لا يزال موجوداً
+  const installButton = document.getElementById('install-button');
+  if (installButton) {
+    installButton.remove();
   }
 });
+// Install Prompt Handling
+let installPrompt = null;
 
-// Restart button functionality
-restartButton.addEventListener('click', () => {
-  restartCounter--;
-  if (restartCounter <= 0) {
-    // Restart the game
-    restartGame();
-  } else {
-    updateDisplays();
-  }
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPrompt = e;
+  showInstallButton();
 });
 
-// Fullscreen button functionality
-fullscreenButton.addEventListener('click', () => {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen();
-  } else {
-    document.exitFullscreen();
-  }
-});
+function showInstallButton() {
+  const installBtn = document.createElement('button');
+  installBtn.id = 'install-btn';
+  installBtn.textContent = 'Install Game';
+  installBtn.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    background: #FF5722;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  `;
+  
+  installBtn.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    const result = await installPrompt.prompt();
+    console.log(`Install prompt was: ${result.outcome}`);
+    installPrompt = null;
+    installBtn.remove();
+  });
 
-// Start background music
-bgMusic.play().catch(error => {
-  console.error('Background music failed to play:', error);
-});
+  document.body.appendChild(installBtn);
+}
 
-// Reset restart button state on page load
-restartButton.disabled = true;
+// Check if app is already installed
+window.addEventListener('appinstalled', () => {
+  console.log('App was successfully installed');
+  const installBtn = document.getElementById('install-btn');
+  if (installBtn) installBtn.remove();
+});
