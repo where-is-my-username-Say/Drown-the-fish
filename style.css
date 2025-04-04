@@ -30,6 +30,28 @@ html, body {
   transform: translate(-50%, -50%);
 }
 
+/* Duck Image Enhancements */
+#photo-image {
+  width: 200px;
+  height: 200px;
+  border: 2px solid #808080;
+  cursor: pointer;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+  user-select: none;
+  /* New properties for smooth image transitions */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  backface-visibility: hidden;
+  background-color: transparent;
+  object-fit: cover;
+}
+
+#photo-image:hover {
+  transform: scale(1.02);
+}
+
 /* Language Button */
 #language-button {
   position: absolute;
@@ -136,21 +158,6 @@ html, body {
   flex-direction: column;
   align-items: center;
   margin-bottom: 15px;
-}
-
-#photo-image {
-  width: 200px;
-  height: 200px;
-  border: 2px solid #808080;
-  cursor: pointer;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s ease;
-  user-select: none;
-}
-
-#photo-image:hover {
-  transform: scale(1.02);
 }
 
 #photo-hp {
@@ -305,7 +312,7 @@ html, body {
   100% { transform: translateY(-50px); opacity: 0; }
 }
 
-/* Shake Animation */
+/* Duck Animations */
 @keyframes shake {
   0%, 100% { transform: translate(0); }
   10%, 30%, 50%, 70%, 90% { transform: translate(-5px, -5px); }
@@ -314,6 +321,12 @@ html, body {
 
 #photo-image.shake {
   animation: shake 0.6s;
+}
+
+/* Dead Duck Styling */
+#photo-image.dead-duck {
+  filter: brightness(0.7) sepia(1) hue-rotate(-50deg) saturate(5);
+  transition: filter 0.3s ease;
 }
 
 /* Message Display */
@@ -415,51 +428,5 @@ html[dir="rtl"] #top-buttons {
   100% { background-color: transparent; }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  #photo-image {
-    width: 180px;
-    height: 180px;
-  }
-  
-  .btn {
-    font-size: 11px;
-    padding: 6px 4px;
-    height: 45px;
-  }
-
-  #top-buttons {
-    flex-direction: column;
-    gap: 5px;
-  }
-}
-
-@media (max-width: 480px) {
-  #photo-image {
-    width: 160px;
-    height: 160px;
-  }
-  
-  .btn {
-    font-size: 10px;
-    height: 40px;
-    min-width: 70px;
-  }
-  
-  #buttons-grid {
-    max-width: 300px;
-  }
-
-  #save-button, #donate-button {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-  
-  #top-buttons {
-    top: 40px;
-  }
-  
-  html[dir="rtl"] #top-buttons {
-    flex-direction: column-reverse;
-  }
+/* Dead Duck
 }

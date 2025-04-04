@@ -39,7 +39,7 @@ let gameVersion = '1.2';
 // Game Translations
 const translations = {
   en: {
-    welcome: "Welcome to Minecraft Photo Hunt!",
+    welcome: "Welcome to Minecraft Duck Hunt!",
     damage: "Damage:",
     gold: "Gold:",
     critChance: "Crit Chance:",
@@ -67,21 +67,21 @@ const translations = {
     storageError: "LocalStorage not supported in your browser!"
   },
   ar: {
-    welcome: "اهلا يا متخلف! ",
+    welcome: "اهلا يا متخلف!",
     damage: "الدمج:",
     gold: "قطع ذهبية:",
-    critChance: "كريت ريت :",
+    critChance: "كريت ريت:",
     critMultiplier: "كريت دمج:",
     upgrade: "طور",
-    critChanceUpgrade: "كريت ريت ",
-    critDamageUpgrade: " كريت دمج",
-    autoClicker: " اوتو كليكر للضعفاء ",
-    acDamage: "قوة الاوتو كليكر  ",
-    acSpeed: "سرعة الاوتو كليكر  ",
-    fullscreen: "تكبير الشاشة ",
+    critChanceUpgrade: "كريت ريت",
+    critDamageUpgrade: "كريت دمج",
+    autoClicker: "اوتو كليكر للضعفاء",
+    acDamage: "قوة الاوتو كليكر",
+    acSpeed: "سرعة الاوتو كليكر",
+    fullscreen: "تكبير الشاشة",
     toggleMusic: "تشغيل/إيقاف الموسيقى",
     toggleSound: "تشغيل/إيقاف الصوت",
-    restart: "انىَحار",
+    restart: "إعادة تشغيل",
     donate: "تبرع للمسكين",
     language: "English",
     save: "حفظ اللعبة",
@@ -126,27 +126,17 @@ const elements = {
 
 // Initialize the Game
 function initGame() {
-  // Check for localStorage support
   if(!isLocalStorageSupported()) {
     showMessage(translations[currentLanguage].storageError);
     elements.saveButton.disabled = true;
     return;
   }
 
-  // Load saved preferences
   loadPreferences();
-  
-  // Set up game displays
   updateDisplays();
   updateLanguage();
-  
-  // Initialize event listeners
   initEventListeners();
-  
-  // Set up audio
   initAudio();
-  
-  // Check for saved game
   checkForSavedGame();
 }
 
@@ -162,7 +152,7 @@ function isLocalStorageSupported() {
   }
 }
 
-// Load user preferences from localStorage
+// Load user preferences
 function loadPreferences() {
   const savedLanguage = localStorage.getItem('gameLanguage');
   if (savedLanguage) currentLanguage = savedLanguage;
@@ -285,9 +275,12 @@ function initEventListeners() {
   elements.languageButton.addEventListener('click', toggleLanguage);
 }
 
-// Photo click handler
+// Photo click handler with duck image transitions
 function handlePhotoClick(event) {
   if (photoDefeated) return;
+  
+  // Show attacked duck image
+  elements.photoImage.src = 'being_attacked.jpg';
   
   totalClicks++;
   let damage = clickDamage;
@@ -309,12 +302,20 @@ function handlePhotoClick(event) {
   playDamageSound();
   animatePhotoClick();
   updateDisplays();
+  
+  // Return to normal duck after 100ms
+  setTimeout(() => {
+    if (!photoDefeated) {
+      elements.photoImage.src = 'fish.jpg';
+    }
+  }, 100);
 }
 
-// Handle photo defeat
+// Handle photo defeat with dead duck image
 function handlePhotoDefeat() {
   photoHP = 0;
   photoDefeated = true;
+  elements.photoImage.src = 'deadduck.jpg'; // Show dead duck
   const goldEarned = Math.floor(initialHP / 2);
   gold += goldEarned;
   totalGoldEarned += goldEarned;
@@ -327,6 +328,7 @@ function handlePhotoDefeat() {
     initialHP += hpIncrement;
     photoHP = initialHP;
     photoDefeated = false;
+    elements.photoImage.src = 'fish.jpg'; // Return to normal duck
     updateDisplays();
   }, 2000);
 }
@@ -502,7 +504,7 @@ function resetGame() {
   critDamageCost = 10;
   
   clearInterval(autoClickerInterval);
-  elements.photoImage.src = 'fish.jpg';
+  elements.photoImage.src = 'fish.jpg'; // Reset to normal duck
   updateDisplays();
 }
 
@@ -606,6 +608,9 @@ function loadGame() {
       autoClickerInterval = setInterval(autoClickerTick, autoClickerSpeed);
     }
 
+    // Set correct duck image based on state
+    elements.photoImage.src = photoDefeated ? 'deadduck.jpg' : 'fish.jpg';
+    
     elements.bgMusic.muted = musicMuted;
     elements.gameContainer.classList.add('load-flash');
     setTimeout(() => elements.gameContainer.classList.remove('load-flash'), 500);
@@ -663,6 +668,33 @@ window.addEventListener('appinstalled', () => {
   const installBtn = document.getElementById('install-btn');
   if (installBtn) installBtn.remove();
 });
+function handlePhotoDefeat() {
+  photoHP = 0;
+  photoDefeated = true;
+  elements.photoImage.src = 'deadduck.jpg'; // Show dead duck
+  const goldEarned = Math.floor(initialHP / 2);
+  gold += goldEarned;
+  totalGoldEarned += goldEarned;
+  
+  // Play explosion sound
+  if (!soundMuted) {
+    const explosionSound = document.getElementById('explosion-sound');
+    explosionSound.currentTime = 0;
+    explosionSound.play().catch(e => console.log("Explosion sound error:", e));
+  }
+  
+  showMessage(currentLanguage === 'en' ? 
+    `You earned ${goldEarned} gold!` : 
+    `لقد ربحت ${goldEarned} ذهب!`);
+  
+  setTimeout(() => {
+    initialHP += hpIncrement;
+    photoHP = initialHP;
+    photoDefeated = false;
+    elements.photoImage.src = 'fish.jpg'; // Return to normal duck
+    updateDisplays();
+  }, 2000);
+}
 
 // Start the game
 initGame();

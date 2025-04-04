@@ -3,10 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Minecraft Photo Hunt</title>
+  <title>Minecraft Duck Hunt</title>
   <link href="style.css" rel="stylesheet" type="text/css">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#ff5722">
+  <!-- Preload duck images for instant transitions -->
+  <link rel="preload" href="fish.jpg" as="image">
+  <link rel="preload" href="deadduck.jpg" as="image">
+  <link rel="preload" href="being_attacked.jpg" as="image">
 </head>
 <body>
   <div id="minecraft-background">
@@ -20,14 +24,14 @@
   </div>
 
   <div id="game-container">
-    <div id="welcome-message">Welcome to the site!</div>
+    <div id="welcome-message">Welcome to Duck Hunt!</div>
     <div id="top-buttons">
       <a id="donate-button" href="https://tip.dokan.sa/zookoomaan_2004869" target="_blank">Donate</a>
       <button id="save-button">Save Game</button>
     </div>
 
     <div id="photo-container">
-      <img id="photo-image" src="fish.jpg" alt="Clickable Photo">
+      <img id="photo-image" src="fish.jpg" alt="Clickable Duck" width="200" height="200">
       <div id="photo-hp">HP: 50</div>
     </div>
 
@@ -65,7 +69,7 @@
   </div>
 
   <div id="message-display"></div>
-
+<audio id="explosion-sound" src="exp.mp3" preload="auto"></audio>
   <audio id="damage-sound" src="dmg.mp3" preload="auto"></audio>
   <audio id="bg-music" src="BG.mp3" loop preload="auto"></audio>
 
