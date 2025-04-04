@@ -591,3 +591,28 @@ html[dir="rtl"] {
     scroll-behavior: auto !important;
   }
 }
+/* جميع الأنماط السابقة تبقى كما هي */
+/* مع التأكد من وجود هذه الأنماط لزر التبرع */
+
+#donate-button {
+  background-color: #ff5722;
+  color: white;
+  padding: 10px 16px;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-size: 14px;
+  transition: var(--transition-medium);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+#donate-button:hover {
+  background-color: #e54712;
+  transform: translateY(-2px);
+}

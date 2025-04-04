@@ -105,6 +105,7 @@ const elements = {
   muteSoundButton: document.getElementById('mute-sound-button'),
   restartButton: document.getElementById('restart-button'),
   saveButton: document.getElementById('save-button'),
+  donateButton: document.getElementById('donate-button'),
   languageButton: document.getElementById('language-button'),
   damageSound: document.getElementById('damage-sound'),
   bgMusic: document.getElementById('bg-music'),
@@ -153,7 +154,12 @@ function initEventListeners() {
   elements.muteSoundButton.addEventListener('click', toggleSound);
   elements.restartButton.addEventListener('click', confirmReset);
   elements.saveButton.addEventListener('click', saveGame);
+  elements.donateButton.addEventListener('click', handleDonate);
   elements.languageButton.addEventListener('click', toggleLanguage);
+}
+
+function handleDonate() {
+  window.open('https://tip.dokan.sa/zookoomaan_2004869', '_blank');
 }
 
 // Game Logic
@@ -178,8 +184,11 @@ function handlePhotoClick(event) {
   
   setTimeout(() => {
     if (!gameState.photoDefeated) elements.photoImage.src = 'fish.jpg';
-  }, 100);
+  }, 370);
 }
+
+// باقي الدوال تبقى كما هي بدون تغيير
+// ... [جميع الدوال الأخرى الموجودة في script.js الأصلي]
 
 function handlePhotoDefeat() {
   gameState.photoHP = 0;
