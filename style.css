@@ -401,20 +401,6 @@ html[dir="rtl"] #top-buttons {
   100% { background-color: transparent; }
 }
 
-#toggle-secret-button {
-  background-color: #9c27b0;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-#toggle-secret-button:hover {
-  background-color: #7b1fa2;
-  transform: scale(1.05);
-} 
 /* تعديلات على الـ top-buttons */
 #top-buttons {
   position: absolute;
@@ -440,24 +426,6 @@ html[dir="rtl"] #top-buttons {
   z-index: 100;
 }
 
-/* تعديل موقع secret-code-container */
-#secret-code-container {
-  position: absolute;
-  top: 50px; /* تحت الأزرار مباشرة */
-  left: 10px;
-  background-color: rgba(0, 0, 0, 0.8);
-  padding: 10px;
-  border-radius: 5px;
-  display: flex;
-  gap: 5px;
-  width: 200px;
-  box-sizing: border-box;
-  transition: all 0.3s ease;
-  transform: translateY(-10px);
-  opacity: 0;
-  visibility: hidden;
-}
-
 /* تعديل موقع game-container لرفع المحتوى */
 #game-container {
   display: flex;
@@ -477,9 +445,37 @@ html[dir="rtl"] #top-buttons {
   left: auto;
   right: 10px;
   flex-direction: row; /* الحفاظ على اتجاه الصف حتى في العربية */
+#secret-code-container {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  gap: 5px;
+  width: 200px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
 }
+
+#toggle-secret-button {
+  background-color: #9c27b0;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#toggle-secret-button:hover {
+  background-color: #7b1fa2;
+  transform: scale(1.05);
+}
+
 .hidden {
   display: none;
-}
+} 
 /* Dead Duck
 }

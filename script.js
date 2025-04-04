@@ -133,10 +133,13 @@ const elements = {
   damageSound: document.getElementById('damage-sound'),
   bgMusic: document.getElementById('bg-music'),
   explosionSound: document.getElementById('explosion-sound'),
+  toggleSecretButton: document.const elements = 
+  // ... عناصر أخرى
   toggleSecretButton: document.getElementById('toggle-secret-button'),
   secretCodeContainer: document.getElementById('secret-code-container'),
   secretCodeInput: document.getElementById('secret-code-input'),
   secretCodeButton: document.getElementById('secret-code-button')
+  // ... عناصر أخرى
 };
 
 // Initialize the Game
