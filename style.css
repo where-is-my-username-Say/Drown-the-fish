@@ -138,20 +138,6 @@ html, body {
   transform: none;
 }
 
-/* Game Container */
-#game-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
-  gap: 15px;
-  background-color: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-}
-
 /* Photo Container */
 #photo-container {
   display: flex;
@@ -427,17 +413,29 @@ html[dir="rtl"] #top-buttons {
   0% { background-color: rgba(103, 58, 183, 0.3); }
   100% { background-color: transparent; }
 }
+/* Top Buttons Container */
+#top-buttons {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+  min-width: 120px;
+}
+
 /* Secret Code Container */
 #secret-code-container {
   position: absolute;
-  top: 100%;
-  left: 0;
+  top: 150px; /* تحت الأزرار العلوية */
+  left: 10px;
   background-color: rgba(0, 0, 0, 0.8);
   padding: 10px;
-  border-radius: 0 0 5px 5px;
+  border-radius: 5px;
   display: flex;
   gap: 5px;
-  width: 100%;
+  width: 200px;
   box-sizing: border-box;
   transition: all 0.3s ease;
   transform: translateY(-10px);
@@ -466,16 +464,18 @@ html[dir="rtl"] #top-buttons {
   transform: scale(1.05);
 }
 
-/* Adjust top buttons container */
-#top-buttons {
-  position: absolute;
-  top: 50px;
-  left: 10px;
+/* Game Container - تأكد من وجود مساحة كافية للأزرار */
+#game-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  z-index: 100;
-  min-width: 120px;
-}
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding-top: 100px; /* إضافة حشوة علوية */
+  box-sizing: border-box;
+  gap: 15px;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+} 
 /* Dead Duck
 }
