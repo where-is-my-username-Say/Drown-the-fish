@@ -437,6 +437,53 @@ function loadGame() {
     return false;
   }
 }
+function updateHPBar() {
+  const hpBar = document.getElementById('hp-bar');
+  const percent = (gameState.photoHP / gameState.initialHP) * 100;
+  hpBar.style.width = `${percent}%`;
+  
+  // Change color based on HP percentage
+  if (percent < 20) {
+    hpBar.style.background = '#ff0000';
+  } else if (percent < 50) {
+    hpBar.style.background = '#ff6600';
+  } else {
+    hpBar.style.background = '#00ff00';
+  }
+}
+function updateUI() {
+  elements.photoHP.textContent = `HP: ${gameState.photoHP}/${gameState.initialHP}`;
+  updateHPBar(); // Add this line
+  // ... rest of the existing updateUI code
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {
+      console.error(`Error attempting to enable fullscreen: ${err.message}`);
+    });
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  }
+}
+function toggleMusic() {
+  gameState.audio.musicMuted = !gameState.audio.musicMuted;
+  elements.bgMusic.muted = gameState.audio.musicMuted;
+  saveAudioPreferences();
+  updateUI();
+}
 
+function toggleSound() {
+  gameState.audio.soundMuted = !gameState.audio.soundMuted;
+  saveAudioPreferences();
+  updateUI();
+}
 // Initialize Game
-initGame();
+function initGame() {
+  loadPreferences();
+  initEventListeners();
+  initAudio();
+  updateUI();
+  updateHPBar(); // Add this line
+}
