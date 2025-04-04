@@ -1,42 +1,42 @@
-// Register Service Worker
+// Register Service Worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
-      .catch(err => console.error('Service Worker registration failed:', err));
+      .then(reg => console.log('Service Worker registered'))
+      .catch(err => console.log('Registration failed:', err));
   });
 }
 
-// Game State
-const gameState = {
-  initialHP: 50,
-  photoHP: 50,
-  clickDamage: 2,
-  gold: 0,
-  hpIncrement: 25,
-  upgradeCount: 0,
-  photoDefeated: false,
-  critChance: 0.1,
-  critMultiplier: 2,
-  autoClicker: {
-    active: false,
-    damage: 0,
-    cost: 50,
-    speed: 1000,
-    speedCost: 30,
-    damageCost: 25
-  },
-  critUpgrades: {
-    chanceCost: 10,
-    damageCost: 10
-  },
-  audio: {
-    musicMuted: false,
-    soundMuted: false
-  },
-  version: '1.3'
-};
+// Game State Variables
+let initialHP = 50;
+let photoHP = initialHP;
+let clickDamage = 2;
+let gold = 0;
+let hpIncrement = 25;
+let upgradeCount = 0;
+let photoDefeated = false;
+let totalClicks = 0;
+let totalDamage = 0;
+let totalGoldEarned = 0;
+let critChance = 0.1;
+let critMultiplier = 2;
+let critHits = 0;
+let autoClickerActive = false;
+let autoClickerInterval;
+let autoClickerDamage = 0;
+let autoClickerCost = 50;
+let autoClickerSpeed = 1000;
+let autoClickerLevel = 0;
+let autoClickerSpeedCost = 30;
+let autoClickerDamageCost = 25;
+let critChanceCost = 10;
+let critDamageCost = 10;
+let musicMuted = false;
+let soundMuted = false;
+let currentLanguage = 'en';
+let gameVersion = '1.3';
 
-// Translations
+// Game Translations
 const translations = {
   en: {
     welcome: "Welcome to Minecraft Duck Hunt!",
@@ -54,11 +54,17 @@ const translations = {
     toggleMusic: "Toggle Music",
     toggleSound: "Toggle Sound",
     restart: "Restart",
+    donate: "Donate",
+    language: "العربية",
     save: "Save Game",
-    saved: "Game Saved!",
+    saved: "Game Saved Successfully!",
     load: "Game Loaded!",
     noSave: "No saved game found",
-    confirmReset: "Reset all progress?"
+    saveError: "Save failed (storage full or not supported)",
+    loadError: "Corrupted save data",
+    confirmLoad: "Load saved game?",
+    confirmReset: "Reset all progress?",
+    storageError: "LocalStorage not supported in your browser!"
   },
   ar: {
     welcome: "اهلا يا متخلف!",
@@ -66,7 +72,7 @@ const translations = {
     gold: "قطع ذهبية:",
     critChance: "كريت ريت:",
     critMultiplier: "كريت دمج:",
-    upgrade: "طور",
+    upgrade: "ط��ر",
     critChanceUpgrade: "كريت ريت",
     critDamageUpgrade: "كريت دمج",
     autoClicker: "اوتو كليكر للضعفاء",
@@ -76,11 +82,17 @@ const translations = {
     toggleMusic: "تشغيل/إيقاف الموسيقى",
     toggleSound: "تشغيل/إيقاف الصوت",
     restart: "إعادة تشغيل",
+    donate: "تبرع للمسكين",
+    language: "English",
     save: "حفظ اللعبة",
     saved: "تم الحفظ بنجاح!",
     load: "تم تحميل اللعبة!",
     noSave: "لا يوجد حفظ سابق",
-    confirmReset: "إعادة تعيين كل التقدم؟"
+    saveError: "خطأ في الحفظ (قد يكون التخزين ممتلئاً أو غير مدعوم)",
+    loadError: "بيانات الحفظ تالفة",
+    confirmLoad: "تحميل اللعبة المحفوظة؟",
+    confirmReset: "إعادة تعيين كل التقدم؟",
+    storageError: "المتصفح لا يدعم خاصية الحفظ المحلي!"
   }
 };
 
@@ -94,6 +106,7 @@ const elements = {
   critMultiplier: document.getElementById('crit-multiplier'),
   messageDisplay: document.getElementById('message-display'),
   welcomeMessage: document.getElementById('welcome-message'),
+  gameContainer: document.getElementById('game-container'),
   upgradeButton: document.getElementById('upgrade-button'),
   critChanceButton: document.getElementById('crit-chance-button'),
   critDamageButton: document.getElementById('crit-damage-button'),
@@ -104,43 +117,149 @@ const elements = {
   muteMusicButton: document.getElementById('mute-music-button'),
   muteSoundButton: document.getElementById('mute-sound-button'),
   restartButton: document.getElementById('restart-button'),
-  saveButton: document.getElementById('save-button'),
   donateButton: document.getElementById('donate-button'),
+  saveButton: document.getElementById('save-button'),
   languageButton: document.getElementById('language-button'),
   damageSound: document.getElementById('damage-sound'),
   bgMusic: document.getElementById('bg-music'),
   explosionSound: document.getElementById('explosion-sound')
 };
 
-let currentLanguage = 'en';
-let autoClickerInterval;
-
-// Initialize Game
+// Initialize the Game
 function initGame() {
+  if(!isLocalStorageSupported()) {
+    showMessage(translations[currentLanguage].storageError);
+    elements.saveButton.disabled = true;
+    return;
+  }
+
   loadPreferences();
+  updateDisplays();
+  updateLanguage();
   initEventListeners();
   initAudio();
-  updateUI();
+  checkForSavedGame();
 }
 
+// Check if localStorage is supported
+function isLocalStorageSupported() {
+  try {
+    const testKey = 'test';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+// Load user preferences
 function loadPreferences() {
   const savedLanguage = localStorage.getItem('gameLanguage');
   if (savedLanguage) currentLanguage = savedLanguage;
   
   const audioPrefs = JSON.parse(localStorage.getItem('audioPreferences')) || {};
-  gameState.audio.musicMuted = audioPrefs.musicMuted || false;
-  gameState.audio.soundMuted = audioPrefs.soundMuted || false;
+  musicMuted = audioPrefs.musicMuted || false;
+  soundMuted = audioPrefs.soundMuted || false;
 }
 
+// Initialize audio system
 function initAudio() {
   elements.bgMusic.volume = 0.3;
-  elements.bgMusic.muted = gameState.audio.musicMuted;
+  elements.bgMusic.muted = musicMuted;
   
-  document.addEventListener('click', () => {
-    elements.bgMusic.play().catch(console.error);
+  document.addEventListener('click', function initAudioContext() {
+    const playPromise = elements.bgMusic.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(e => {
+        console.log("Audio play failed, retrying...", e);
+        setTimeout(() => elements.bgMusic.play().catch(console.error), 1000);
+      });
+    }
+    
+    document.removeEventListener('click', initAudioContext);
   }, { once: true });
 }
 
+// Check for saved game data
+function checkForSavedGame() {
+  const savedGame = localStorage.getItem('minecraftPhotoHuntSave');
+  if (!savedGame) return;
+
+  try {
+    const gameData = JSON.parse(savedGame);
+    if (gameData.version !== gameVersion) {
+      console.log("Save version mismatch, ignoring old save");
+      return;
+    }
+
+    setTimeout(() => {
+      if (confirm(translations[currentLanguage].confirmLoad)) {
+        loadGame();
+      } else {
+        addLoadLaterButton();
+      }
+    }, 1000);
+  } catch (e) {
+    console.error("Error parsing saved game:", e);
+  }
+}
+
+// Add temporary load button
+function addLoadLaterButton() {
+  const loadBtn = document.createElement('button');
+  loadBtn.id = 'load-later-btn';
+  loadBtn.textContent = translations[currentLanguage].load;
+  loadBtn.className = 'btn utility-btn';
+  
+  loadBtn.addEventListener('click', () => {
+    loadGame();
+    loadBtn.remove();
+  });
+
+  document.body.appendChild(loadBtn);
+  
+  setTimeout(() => {
+    if (document.body.contains(loadBtn)) {
+      loadBtn.remove();
+    }
+  }, 30000);
+}
+
+// Update all game displays
+function updateDisplays() {
+  elements.photoHP.textContent = `HP: ${photoHP}/${initialHP}`;
+  elements.clickDamage.textContent = `${translations[currentLanguage].damage} ${clickDamage}`;
+  elements.gold.textContent = `${translations[currentLanguage].gold} ${gold}`;
+  elements.critChance.textContent = `${translations[currentLanguage].critChance} ${Math.round(critChance * 100)}%`;
+  elements.critMultiplier.textContent = `${translations[currentLanguage].critMultiplier} ${critMultiplier}x`;
+
+  // Update buttons
+  const upgradeCost = getUpgradeCost();
+  elements.upgradeButton.textContent = `${translations[currentLanguage].upgrade} (${upgradeCost}g)`;
+  elements.autoClickerButton.textContent = `${translations[currentLanguage].autoClicker} (${autoClickerCost}g)`;
+  elements.autoClickerButton.disabled = autoClickerActive || gold < autoClickerCost;
+  elements.critChanceButton.textContent = `${translations[currentLanguage].critChanceUpgrade} (${critChanceCost}g)`;
+  elements.critDamageButton.textContent = `${translations[currentLanguage].critDamageUpgrade} (${critDamageCost}g)`;
+  elements.autoClickerDmgButton.textContent = `${translations[currentLanguage].acDamage} (${autoClickerDamageCost}g)`;
+  elements.autoClickerSpeedButton.textContent = `${translations[currentLanguage].acSpeed} (${autoClickerSpeedCost}g)`;
+
+  // Update audio buttons
+  elements.muteMusicButton.textContent = musicMuted ? 
+    translations[currentLanguage].toggleMusic.replace("Toggle", "Unmute") : 
+    translations[currentLanguage].toggleMusic;
+  elements.muteSoundButton.textContent = soundMuted ? 
+    translations[currentLanguage].toggleSound.replace("Toggle", "Unmute") : 
+    translations[currentLanguage].toggleSound;
+
+  // Update other buttons
+  elements.saveButton.textContent = translations[currentLanguage].save;
+  elements.restartButton.textContent = translations[currentLanguage].restart;
+  elements.saveButton.disabled = !isLocalStorageSupported();
+}
+
+// Initialize all event listeners
 function initEventListeners() {
   elements.photoImage.addEventListener('click', handlePhotoClick);
   elements.upgradeButton.addEventListener('click', upgradeDamage);
@@ -154,151 +273,74 @@ function initEventListeners() {
   elements.muteSoundButton.addEventListener('click', toggleSound);
   elements.restartButton.addEventListener('click', confirmReset);
   elements.saveButton.addEventListener('click', saveGame);
-  elements.donateButton.addEventListener('click', handleDonate);
   elements.languageButton.addEventListener('click', toggleLanguage);
 }
 
-function handleDonate() {
-  window.open('https://tip.dokan.sa/zookoomaan_2004869', '_blank');
-}
-
-// Game Logic
+// Photo click handler with duck image transitions
 function handlePhotoClick(event) {
-  if (gameState.photoDefeated) return;
+  if (photoDefeated) return;
   
+  // Show attacked duck image
   elements.photoImage.src = 'being_attacked.jpg';
   
-  let damage = gameState.clickDamage;
-  const isCrit = Math.random() < gameState.critChance;
+  totalClicks++;
+  let damage = clickDamage;
+  let isCrit = Math.random() < critChance;
   
-  if (isCrit) damage = Math.floor(damage * gameState.critMultiplier);
+  if (isCrit) {
+    damage = Math.floor(damage * critMultiplier);
+    critHits++;
+  }
   
-  gameState.photoHP -= damage;
+  photoHP -= damage;
+  totalDamage += damage;
   
-  if (gameState.photoHP <= 0) handlePhotoDefeat();
+  if (photoHP <= 0) {
+    handlePhotoDefeat();
+  }
   
   showDamage(damage, isCrit, event);
-  playSound(elements.damageSound);
-  animateClick();
-  updateUI();
+  playDamageSound();
+  animatePhotoClick();
+  updateDisplays();
   
+  // Return to normal duck after 100ms
   setTimeout(() => {
-    if (!gameState.photoDefeated) elements.photoImage.src = 'fish.jpg';
-  }, 370);
+    if (!photoDefeated) {
+      elements.photoImage.src = 'fish.jpg';
+    }
+  }, 100);
 }
 
-// باقي الدوال تبقى كما هي بدون تغيير
-// ... [جميع الدوال الأخرى الموجودة في script.js الأصلي]
-
+// Handle photo defeat with dead duck image
 function handlePhotoDefeat() {
-  gameState.photoHP = 0;
-  gameState.photoDefeated = true;
+  photoHP = 0;
+  photoDefeated = true;
   elements.photoImage.src = 'deadduck.jpg';
+  const goldEarned = Math.floor(initialHP / 2);
+  gold += goldEarned;
+  totalGoldEarned += goldEarned;
   
-  const goldEarned = Math.floor(gameState.initialHP / 2);
-  gameState.gold += goldEarned;
+  // Play explosion sound
+  if (!soundMuted) {
+    elements.explosionSound.currentTime = 0;
+    elements.explosionSound.play().catch(e => console.log("Explosion sound error:", e));
+  }
   
-  playSound(elements.explosionSound);
-  showMessage(`${translations[currentLanguage].youEarned} ${goldEarned} ${translations[currentLanguage].gold}`);
+  showMessage(currentLanguage === 'en' ? 
+    `You earned ${goldEarned} gold!` : 
+    `لقد ربحت ${goldEarned} ذهب!`);
   
   setTimeout(() => {
-    gameState.initialHP += gameState.hpIncrement;
-    gameState.photoHP = gameState.initialHP;
-    gameState.photoDefeated = false;
+    initialHP += hpIncrement;
+    photoHP = initialHP;
+    photoDefeated = false;
     elements.photoImage.src = 'fish.jpg';
-    updateUI();
+    updateDisplays();
   }, 2000);
 }
 
-// Upgrade Functions
-function upgradeDamage() {
-  const cost = getUpgradeCost();
-  if (gameState.gold >= cost) {
-    gameState.gold -= cost;
-    gameState.clickDamage += 1;
-    gameState.upgradeCount++;
-    updateUI();
-  }
-}
-
-function upgradeCritChance() {
-  if (gameState.gold >= gameState.critUpgrades.chanceCost) {
-    gameState.gold -= gameState.critUpgrades.chanceCost;
-    gameState.critChance = Math.min(0.95, gameState.critChance + 0.05);
-    gameState.critUpgrades.chanceCost = Math.floor(gameState.critUpgrades.chanceCost * 1.5);
-    updateUI();
-  }
-}
-
-function upgradeCritDamage() {
-  if (gameState.gold >= gameState.critUpgrades.damageCost) {
-    gameState.gold -= gameState.critUpgrades.damageCost;
-    gameState.critMultiplier += 0.2;
-    gameState.critUpgrades.damageCost = Math.floor(gameState.critUpgrades.damageCost * 1.5);
-    updateUI();
-  }
-}
-
-// Auto-clicker Functions
-function buyAutoClicker() {
-  if (!gameState.autoClicker.active && gameState.gold >= gameState.autoClicker.cost) {
-    gameState.gold -= gameState.autoClicker.cost;
-    gameState.autoClicker.active = true;
-    gameState.autoClicker.damage = 1;
-    autoClickerInterval = setInterval(autoClickerTick, gameState.autoClicker.speed);
-    updateUI();
-  }
-}
-
-function autoClickerTick() {
-  if (!gameState.photoDefeated) {
-    gameState.photoHP -= gameState.autoClicker.damage;
-    if (gameState.photoHP <= 0) handlePhotoDefeat();
-    updateUI();
-  }
-}
-
-function upgradeAutoClickerDamage() {
-  if (gameState.gold >= gameState.autoClicker.damageCost) {
-    gameState.gold -= gameState.autoClicker.damageCost;
-    gameState.autoClicker.damage += 1;
-    gameState.autoClicker.damageCost = Math.floor(gameState.autoClicker.damageCost * 1.3);
-    updateUI();
-  }
-}
-
-function upgradeAutoClickerSpeed() {
-  if (gameState.gold >= gameState.autoClicker.speedCost) {
-    gameState.gold -= gameState.autoClicker.speedCost;
-    gameState.autoClicker.speed = Math.max(200, gameState.autoClicker.speed - 100);
-    clearInterval(autoClickerInterval);
-    autoClickerInterval = setInterval(autoClickerTick, gameState.autoClicker.speed);
-    gameState.autoClicker.speedCost = Math.floor(gameState.autoClicker.speedCost * 1.4);
-    updateUI();
-  }
-}
-
-// UI Functions
-function updateUI() {
-  elements.photoHP.textContent = `HP: ${gameState.photoHP}/${gameState.initialHP}`;
-  elements.clickDamage.textContent = `${translations[currentLanguage].damage} ${gameState.clickDamage}`;
-  elements.gold.textContent = `${translations[currentLanguage].gold} ${gameState.gold}`;
-  elements.critChance.textContent = `${translations[currentLanguage].critChance} ${Math.round(gameState.critChance * 100)}%`;
-  elements.critMultiplier.textContent = `${translations[currentLanguage].critMultiplier} ${gameState.critMultiplier}x`;
-
-  // Update buttons
-  elements.upgradeButton.textContent = `${translations[currentLanguage].upgrade} (${getUpgradeCost()}g)`;
-  elements.autoClickerButton.textContent = `${translations[currentLanguage].autoClicker} (${gameState.autoClicker.cost}g)`;
-  elements.autoClickerButton.disabled = gameState.autoClicker.active || gameState.gold < gameState.autoClicker.cost;
-  elements.critChanceButton.textContent = `${translations[currentLanguage].critChanceUpgrade} (${gameState.critUpgrades.chanceCost}g)`;
-  elements.critDamageButton.textContent = `${translations[currentLanguage].critDamageUpgrade} (${gameState.critUpgrades.damageCost}g)`;
-  elements.autoClickerDmgButton.textContent = `${translations[currentLanguage].acDamage} (${gameState.autoClicker.damageCost}g)`;
-  elements.autoClickerSpeedButton.textContent = `${translations[currentLanguage].acSpeed} (${gameState.autoClicker.speedCost}g)`;
-  elements.muteMusicButton.textContent = translations[currentLanguage].toggleMusic;
-  elements.muteSoundButton.textContent = translations[currentLanguage].toggleSound;
-  elements.languageButton.textContent = currentLanguage === 'en' ? 'العربية' : 'English';
-}
-
+// Show damage numbers
 function showDamage(damage, isCrit, event) {
   const damageElement = document.createElement('div');
   damageElement.className = `damage-display ${isCrit ? 'crit-damage' : ''}`;
@@ -310,29 +352,93 @@ function showDamage(damage, isCrit, event) {
   setTimeout(() => damageElement.remove(), 800);
 }
 
-function animateClick() {
+// Play damage sound
+function playDamageSound() {
+  if (!soundMuted) {
+    elements.damageSound.currentTime = 0;
+    elements.damageSound.play().catch(e => console.log("Sound error:", e));
+  }
+}
+
+// Animate photo click
+function animatePhotoClick() {
   elements.photoImage.classList.add('shake');
   setTimeout(() => elements.photoImage.classList.remove('shake'), 600);
 }
 
-function playSound(soundElement) {
-  if (!gameState.audio.soundMuted) {
-    soundElement.currentTime = 0;
-    soundElement.play().catch(console.error);
+// Upgrade functions
+function upgradeDamage() {
+  const cost = getUpgradeCost();
+  if (gold >= cost) {
+    gold -= cost;
+    clickDamage += 1;
+    upgradeCount++;
+    updateDisplays();
   }
 }
 
-// Utility Functions
-function getUpgradeCost() {
-  return Math.floor(2 + gameState.upgradeCount * 1.5);
+function upgradeCritChance() {
+  if (gold >= critChanceCost) {
+    gold -= critChanceCost;
+    critChance = Math.min(0.95, critChance + 0.05);
+    critChanceCost = Math.floor(critChanceCost * 1.5);
+    updateDisplays();
+  }
 }
 
-function showMessage(message) {
-  elements.messageDisplay.textContent = message;
-  elements.messageDisplay.style.opacity = 1;
-  setTimeout(() => elements.messageDisplay.style.opacity = 0, 3000);
+function upgradeCritDamage() {
+  if (gold >= critDamageCost) {
+    gold -= critDamageCost;
+    critMultiplier += 0.2;
+    critDamageCost = Math.floor(critDamageCost * 1.5);
+    updateDisplays();
+  }
 }
 
+// Auto-clicker functions
+function buyAutoClicker() {
+  if (!autoClickerActive && gold >= autoClickerCost) {
+    gold -= autoClickerCost;
+    autoClickerActive = true;
+    autoClickerDamage = 1;
+    autoClickerInterval = setInterval(autoClickerTick, autoClickerSpeed);
+    updateDisplays();
+  }
+}
+
+function upgradeAutoClickerDamage() {
+  if (gold >= autoClickerDamageCost) {
+    gold -= autoClickerDamageCost;
+    autoClickerDamage += 1;
+    autoClickerDamageCost = Math.floor(autoClickerDamageCost * 1.3);
+    updateDisplays();
+  }
+}
+
+function upgradeAutoClickerSpeed() {
+  if (gold >= autoClickerSpeedCost) {
+    gold -= autoClickerSpeedCost;
+    autoClickerSpeed = Math.max(200, autoClickerSpeed - 100);
+    clearInterval(autoClickerInterval);
+    autoClickerInterval = setInterval(autoClickerTick, autoClickerSpeed);
+    autoClickerSpeedCost = Math.floor(autoClickerSpeedCost * 1.4);
+    updateDisplays();
+  }
+}
+
+function autoClickerTick() {
+  if (!photoDefeated) {
+    photoHP -= autoClickerDamage;
+    totalDamage += autoClickerDamage;
+    
+    if (photoHP <= 0) {
+      handlePhotoDefeat();
+    }
+    updateDisplays();
+  }
+}
+
+// Utility functions
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(console.error);
@@ -342,28 +448,36 @@ function toggleFullscreen() {
 }
 
 function toggleMusic() {
-  gameState.audio.musicMuted = !gameState.audio.musicMuted;
-  elements.bgMusic.muted = gameState.audio.musicMuted;
-  saveAudioPreferences();
-  updateUI();
+  musicMuted = !musicMuted;
+  elements.bgMusic.muted = musicMuted;
+  localStorage.setItem('audioPreferences', JSON.stringify({
+    musicMuted,
+    soundMuted
+  }));
+  updateDisplays();
 }
 
 function toggleSound() {
-  gameState.audio.soundMuted = !gameState.audio.soundMuted;
-  saveAudioPreferences();
-  updateUI();
-}
-
-function saveAudioPreferences() {
-  localStorage.setItem('audioPreferences', JSON.stringify(gameState.audio));
+  soundMuted = !soundMuted;
+  localStorage.setItem('audioPreferences', JSON.stringify({
+    musicMuted,
+    soundMuted
+  }));
+  updateDisplays();
 }
 
 function toggleLanguage() {
   currentLanguage = currentLanguage === 'en' ? 'ar' : 'en';
   localStorage.setItem('gameLanguage', currentLanguage);
+  updateLanguage();
+}
+
+function updateLanguage() {
   document.documentElement.lang = currentLanguage;
   document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
-  updateUI();
+  elements.welcomeMessage.textContent = translations[currentLanguage].welcome;
+  elements.languageButton.textContent = translations[currentLanguage].language;
+  updateDisplays();
 }
 
 function confirmReset() {
@@ -373,155 +487,193 @@ function confirmReset() {
 }
 
 function resetGame() {
+  initialHP = 50;
+  photoHP = initialHP;
+  clickDamage = 2;
+  gold = 0;
+  hpIncrement = 25;
+  upgradeCount = 0;
+  photoDefeated = false;
+  totalClicks = 0;
+  totalDamage = 0;
+  totalGoldEarned = 0;
+  critChance = 0.1;
+  critMultiplier = 2;
+  critHits = 0;
+  autoClickerActive = false;
+  autoClickerDamage = 0;
+  autoClickerCost = 50;
+  autoClickerSpeed = 1000;
+  autoClickerLevel = 0;
+  autoClickerSpeedCost = 30;
+  autoClickerDamageCost = 25;
+  critChanceCost = 10;
+  critDamageCost = 10;
+  
   clearInterval(autoClickerInterval);
-  Object.assign(gameState, {
-    initialHP: 50,
-    photoHP: 50,
-    clickDamage: 2,
-    gold: 0,
-    hpIncrement: 25,
-    upgradeCount: 0,
-    photoDefeated: false,
-    critChance: 0.1,
-    critMultiplier: 2,
-    autoClicker: {
-      active: false,
-      damage: 0,
-      cost: 50,
-      speed: 1000,
-      speedCost: 30,
-      damageCost: 25
-    },
-    critUpgrades: {
-      chanceCost: 10,
-      damageCost: 10
-    }
-  });
   elements.photoImage.src = 'fish.jpg';
-  updateUI();
+  updateDisplays();
 }
 
-// Save/Load Functions
+// Save/Load functions
 function saveGame() {
+  if(!isLocalStorageSupported()) {
+    showMessage(translations[currentLanguage].storageError);
+    return;
+  }
+
+  const gameState = {
+    version: gameVersion,
+    timestamp: new Date().toISOString(),
+    initialHP,
+    photoHP,
+    clickDamage,
+    gold,
+    hpIncrement,
+    upgradeCount,
+    photoDefeated,
+    totalClicks,
+    totalDamage,
+    totalGoldEarned,
+    critChance,
+    critMultiplier,
+    autoClickerActive,
+    autoClickerDamage,
+    autoClickerCost,
+    autoClickerSpeed,
+    autoClickerLevel,
+    autoClickerSpeedCost,
+    autoClickerDamageCost,
+    critChanceCost,
+    critDamageCost,
+    critHits,
+    musicMuted,
+    soundMuted
+  };
+  
   try {
-    localStorage.setItem('gameSave', JSON.stringify(gameState));
+    localStorage.setItem('minecraftPhotoHuntSave', JSON.stringify(gameState));
     showMessage(translations[currentLanguage].saved);
+    elements.saveButton.classList.add('save-pulse');
+    setTimeout(() => elements.saveButton.classList.remove('save-pulse'), 1000);
   } catch(e) {
     console.error("Save error:", e);
-    showMessage("Error saving game");
+    if(e.name === 'QuotaExceededError') {
+      showMessage(translations[currentLanguage].saveError);
+    } else {
+      showMessage("Error saving game: " + e.message);
+    }
   }
 }
 
 function loadGame() {
-  const savedGame = localStorage.getItem('gameSave');
+  if(!isLocalStorageSupported()) {
+    showMessage(translations[currentLanguage].storageError);
+    return false;
+  }
+
+  const savedGame = localStorage.getItem('minecraftPhotoHuntSave');
   if (!savedGame) {
     showMessage(translations[currentLanguage].noSave);
     return false;
   }
   
   try {
-    const loadedState = JSON.parse(savedGame);
-    Object.assign(gameState, loadedState);
+    const gameState = JSON.parse(savedGame);
     
-    if (gameState.autoClicker.active) {
-      clearInterval(autoClickerInterval);
-      autoClickerInterval = setInterval(autoClickerTick, gameState.autoClicker.speed);
+    if (!gameState.version || typeof gameState.gold !== 'number') {
+      throw new Error("Invalid save data");
     }
-    
-    elements.photoImage.src = gameState.photoDefeated ? 'deadduck.jpg' : 'fish.jpg';
-    updateUI();
+
+    initialHP = gameState.initialHP || 50;
+    photoHP = gameState.photoHP || initialHP;
+    clickDamage = gameState.clickDamage || 2;
+    gold = gameState.gold || 0;
+    hpIncrement = gameState.hpIncrement || 25;
+    upgradeCount = gameState.upgradeCount || 0;
+    photoDefeated = gameState.photoDefeated || false;
+    totalClicks = gameState.totalClicks || 0;
+    totalDamage = gameState.totalDamage || 0;
+    totalGoldEarned = gameState.totalGoldEarned || 0;
+    critChance = gameState.critChance || 0.1;
+        critMultiplier = gameState.critMultiplier || 2;
+    critHits = gameState.critHits || 0;
+    autoClickerActive = gameState.autoClickerActive || false;
+    autoClickerDamage = gameState.autoClickerDamage || 0;
+    autoClickerCost = gameState.autoClickerCost || 50;
+    autoClickerSpeed = gameState.autoClickerSpeed || 1000;
+    autoClickerLevel = gameState.autoClickerLevel || 0;
+    autoClickerSpeedCost = gameState.autoClickerSpeedCost || 30;
+    autoClickerDamageCost = gameState.autoClickerDamageCost || 25;
+    critChanceCost = gameState.critChanceCost || 10;
+    critDamageCost = gameState.critDamageCost || 10;
+    musicMuted = gameState.musicMuted || false;
+    soundMuted = gameState.soundMuted || false;
+
+    // Restart auto-clicker if it was active
+    if (autoClickerActive) {
+      clearInterval(autoClickerInterval);
+      autoClickerInterval = setInterval(autoClickerTick, autoClickerSpeed);
+    }
+
+    elements.photoImage.src = photoDefeated ? 'deadduck.jpg' : 'fish.jpg';
+    updateDisplays();
     showMessage(translations[currentLanguage].load);
+    elements.gameContainer.classList.add('load-flash');
+    setTimeout(() => elements.gameContainer.classList.remove('load-flash'), 1000);
     return true;
   } catch(e) {
     console.error("Load error:", e);
+    showMessage(translations[currentLanguage].loadError);
     return false;
   }
 }
-function updateHPBar() {
-  const hpBar = document.getElementById('hp-bar');
-  const percent = (gameState.photoHP / gameState.initialHP) * 100;
-  hpBar.style.width = `${percent}%`;
+
+// Helper functions
+function getUpgradeCost() {
+  return Math.floor(2 + Math.pow(upgradeCount, 1.3));
+}
+
+function showMessage(message) {
+  elements.messageDisplay.textContent = message;
+  elements.messageDisplay.style.opacity = 1;
   
-  // Change color based on HP percentage
-  if (percent < 20) {
-    hpBar.style.background = '#ff0000';
-  } else if (percent < 50) {
-    hpBar.style.background = '#ff6600';
-  } else {
-    hpBar.style.background = '#00ff00';
-  }
+  setTimeout(() => {
+    elements.messageDisplay.style.opacity = 0;
+  }, 3000);
 }
-function updateUI() {
-  elements.photoHP.textContent = `HP: ${gameState.photoHP}/${gameState.initialHP}`;
-  updateHPBar(); // Add this line
-  // ... rest of the existing updateUI code
-}
-function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(err => {
-      console.error(`Error attempting to enable fullscreen: ${err.message}`);
+
+// Initialize the game when DOM is loaded
+document.addEventListener('DOMContentLoaded', initGame);
+
+// Handle PWA installation
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  const installBtn = document.createElement('button');
+  installBtn.id = 'install-btn';
+  installBtn.textContent = 'Install App';
+  document.body.appendChild(installBtn);
+  
+  installBtn.addEventListener('click', () => {
+    installBtn.style.display = 'none';
+    deferredPrompt.prompt();
+    
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted install');
+      } else {
+        console.log('User dismissed install');
+      }
+      deferredPrompt = null;
     });
-  } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    }
-  }
-}
-function toggleMusic() {
-  gameState.audio.musicMuted = !gameState.audio.musicMuted;
-  elements.bgMusic.muted = gameState.audio.musicMuted;
-  saveAudioPreferences();
-  updateUI();
-}
+  });
+});
 
-function toggleSound() {
-  gameState.audio.soundMuted = !gameState.audio.soundMuted;
-  saveAudioPreferences();
-  updateUI();
-}
-// Initialize Game
-function initGame() {
-  loadPreferences();
-  initEventListeners();
-  initAudio();
-  updateUI();
-  updateHPBar(); // Add this line
-}// Initialize Game
-function initGame() {
-  loadPreferences();
-  initEventListeners();
-  initAudio();
-  updateUI();
-}
-
-// Audio Toggles (Working)
-function toggleMusic() {
-  gameState.audio.musicMuted = !gameState.audio.musicMuted;
-  elements.bgMusic.muted = gameState.audio.musicMuted;
-  localStorage.setItem('audioPreferences', JSON.stringify(gameState.audio));
-}
-
-function toggleSound() {
-  gameState.audio.soundMuted = !gameState.audio.soundMuted;
-  localStorage.setItem('audioPreferences', JSON.stringify(gameState.audio));
-}
-
-// Fullscreen Fix
-function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(console.error);
-  } else {
-    document.exitFullscreen();
-  }
-}
-
-// Button Grid Initialization
-function initEventListeners() {
-  // ... existing listeners ...
-  document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
-  document.getElementById('mute-music-button').addEventListener('click', toggleMusic);
-  document.getElementById('mute-sound-button').addEventListener('click', toggleSound);
-}
-
-// Start the game
-initGame(); 
+window.addEventListener('appinstalled', () => {
+  console.log('App installed');
+  const installBtn = document.getElementById('install-btn');
+  if (installBtn) installBtn.remove();
+});
