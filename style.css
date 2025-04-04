@@ -64,23 +64,46 @@ html, body {
   z-index: 100;
 }
 
-/* Donate Button */
-#donate-button {
+/* Top Buttons Container */
+#top-buttons {
   position: absolute;
   top: 50px;
   left: 10px;
+  display: flex;
+  gap: 10px;
+  z-index: 100;
+}
+
+/* Donate Button */
+#donate-button {
   background-color: #ff5722;
   color: white;
   padding: 8px 15px;
   border-radius: 5px;
   text-decoration: none;
   font-size: 14px;
-  z-index: 100;
   transition: all 0.2s;
 }
 
 #donate-button:hover {
   background-color: #e54712;
+  transform: scale(1.05);
+}
+
+/* Save Button */
+#save-button {
+  background-color: #673ab7;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+#save-button:hover {
+  background-color: #5e35b1;
   transform: scale(1.05);
 }
 
@@ -307,41 +330,12 @@ html[dir="rtl"] #welcome-message {
   right: 10px;
 }
 
-html[dir="rtl"] #donate-button {
+html[dir="rtl"] #top-buttons {
   left: auto;
   right: 10px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  #photo-image {
-    width: 180px;
-    height: 180px;
-  }
-  
-  .btn {
-    font-size: 11px;
-    padding: 6px 4px;
-    height: 45px;
-  }
-}
-
-@media (max-width: 480px) {
-  #photo-image {
-    width: 160px;
-    height: 160px;
-  }
-  
-  .btn {
-    font-size: 10px;
-    height: 40px;
-    min-width: 70px;
-  }
-  
-  #buttons-grid {
-    max-width: 300px;
-  }
-}
+/* Install Button */
 #install-button {
   position: fixed;
   bottom: 20px;
@@ -361,4 +355,63 @@ html[dir="rtl"] #donate-button {
 #install-button:hover {
   background-color: #e64a19;
   transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  #photo-image {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .btn {
+    font-size: 11px;
+    padding: 6px 4px;
+    height: 45px;
+  }
+
+  #top-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  #photo-image {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .btn {
+    font-size: 10px;
+    height: 40px;
+    min-width: 70px;
+  }
+  
+  #buttons-grid {
+    max-width: 300px;
+  }
+
+  #save-button, #donate-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+.save-pulse {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.load-flash {
+  animation: flash 0.5s ease-out;
+}
+
+@keyframes flash {
+  0% { background-color: rgba(103, 58, 183, 0.3); }
+  100% { background-color: transparent; }
 }
