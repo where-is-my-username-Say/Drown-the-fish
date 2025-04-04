@@ -308,7 +308,7 @@ function handlePhotoClick(event) {
     if (!photoDefeated) {
       elements.photoImage.src = 'fish.jpg';
     }
-  }, 100);
+  }, 370);
 }
 
 // Handle photo defeat with dead duck image
