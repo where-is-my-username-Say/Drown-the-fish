@@ -40,7 +40,6 @@ html, body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   transition: transform 0.2s ease;
   user-select: none;
-  /* New properties for smooth image transitions */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   backface-visibility: hidden;
@@ -76,9 +75,10 @@ html, body {
 /* Top Buttons Container */
 #top-buttons {
   position: absolute;
-  top: 50px;
+  top: 10px;
   left: 10px;
   display: flex;
+  flex-direction: row;
   gap: 10px;
   z-index: 100;
 }
@@ -111,7 +111,6 @@ html, body {
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
-  display: inline-block !important;
 }
 
 #save-button:hover {
@@ -123,6 +122,77 @@ html, body {
   background-color: #666;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Secret Code Button */
+#toggle-secret-button {
+  background-color: #9c27b0;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+#toggle-secret-button:hover {
+  background-color: #7b1fa2;
+  transform: scale(1.05);
+}
+
+/* Secret Code Container */
+#secret-code-container {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  gap: 5px;
+  width: 200px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+#secret-code-input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+}
+
+#secret-code-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#secret-code-button:hover {
+  background-color: #45a049;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Welcome Message */
+#welcome-message {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  color: white;
+  font-size: 16px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 8px 15px;
+  border-radius: 5px;
+  z-index: 100;
 }
 
 /* Photo Container */
@@ -378,7 +448,12 @@ html[dir="rtl"] #welcome-message {
 html[dir="rtl"] #top-buttons {
   left: auto;
   right: 10px;
-  flex-direction: row-reverse;
+  flex-direction: row;
+}
+
+html[dir="rtl"] #secret-code-container {
+  left: auto;
+  right: 10px;
 }
 
 /* Animation Effects */
@@ -401,81 +476,16 @@ html[dir="rtl"] #top-buttons {
   100% { background-color: transparent; }
 }
 
-/* تعديلات على الـ top-buttons */
-#top-buttons {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: flex;
-  flex-direction: row; /* تغيير من column إلى row */
-  gap: 10px;
-  z-index: 100;
-  min-width: auto;
-}
-
-/* تعديل موقع welcome-message */
-#welcome-message {
-  position: absolute;
-  top: 50px; /* نقل إلى أسفل الأزرار */
-  left: 10px;
-  color: white;
-  font-size: 16px;
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 8px 15px;
-  border-radius: 5px;
-  z-index: 100;
-}
-
-/* تعديل موقع game-container لرفع المحتوى */
+/* Game Container */
 #game-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* تغيير من center إلى flex-start */
+  justify-content: flex-start;
   height: 100vh;
-  padding-top: 120px; /* تقليل الحشوة العلوية */
+  padding-top: 120px;
   box-sizing: border-box;
   gap: 15px;
   background-color: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
-}
-
-/* تعديلات للغة العربية */
-html[dir="rtl"] #top-buttons {
-  left: auto;
-  right: 10px;
-  flex-direction: row; /* الحفاظ على اتجاه الصف حتى في العربية */
-#secret-code-container {
-  position: absolute;
-  top: 50px;
-  left: 10px;
-  background-color: rgba(0, 0, 0, 0.8);
-  padding: 10px;
-  border-radius: 5px;
-  display: flex;
-  gap: 5px;
-  width: 200px;
-  box-sizing: border-box;
-  transition: all 0.3s ease;
-}
-
-#toggle-secret-button {
-  background-color: #9c27b0;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-#toggle-secret-button:hover {
-  background-color: #7b1fa2;
-  transform: scale(1.05);
-}
-
-.hidden {
-  display: none;
-} 
-/* Dead Duck
 }
