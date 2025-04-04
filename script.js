@@ -486,4 +486,42 @@ function initGame() {
   initAudio();
   updateUI();
   updateHPBar(); // Add this line
+}// Initialize Game
+function initGame() {
+  loadPreferences();
+  initEventListeners();
+  initAudio();
+  updateUI();
 }
+
+// Audio Toggles (Working)
+function toggleMusic() {
+  gameState.audio.musicMuted = !gameState.audio.musicMuted;
+  elements.bgMusic.muted = gameState.audio.musicMuted;
+  localStorage.setItem('audioPreferences', JSON.stringify(gameState.audio));
+}
+
+function toggleSound() {
+  gameState.audio.soundMuted = !gameState.audio.soundMuted;
+  localStorage.setItem('audioPreferences', JSON.stringify(gameState.audio));
+}
+
+// Fullscreen Fix
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(console.error);
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// Button Grid Initialization
+function initEventListeners() {
+  // ... existing listeners ...
+  document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
+  document.getElementById('mute-music-button').addEventListener('click', toggleMusic);
+  document.getElementById('mute-sound-button').addEventListener('click', toggleSound);
+}
+
+// Start the game
+initGame(); 
