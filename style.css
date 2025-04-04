@@ -83,6 +83,8 @@ html, body {
   text-decoration: none;
   font-size: 14px;
   transition: all 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 #donate-button:hover {
@@ -100,11 +102,18 @@ html, body {
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
+  display: inline-block !important;
 }
 
 #save-button:hover {
   background-color: #5e35b1;
   transform: scale(1.05);
+}
+
+#save-button:disabled {
+  background-color: #666;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Game Container */
@@ -225,6 +234,12 @@ html, body {
   transform: scale(0.98);
 }
 
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .upgrade-btn {
   background-color: #4CAF50;
   color: white;
@@ -319,24 +334,8 @@ html, body {
   z-index: 100;
 }
 
-/* RTL Support */
-html[dir="rtl"] #language-button {
-  right: auto;
-  left: 10px;
-}
-
-html[dir="rtl"] #welcome-message {
-  left: auto;
-  right: 10px;
-}
-
-html[dir="rtl"] #top-buttons {
-  left: auto;
-  right: 10px;
-}
-
 /* Install Button */
-#install-button {
+#install-btn {
   position: fixed;
   bottom: 20px;
   right: 20px;
@@ -352,9 +351,68 @@ html[dir="rtl"] #top-buttons {
   transition: all 0.3s;
 }
 
-#install-button:hover {
+#install-btn:hover {
   background-color: #e64a19;
   transform: scale(1.05);
+}
+
+/* Load Later Button */
+.load-later-btn {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  z-index: 1000;
+  padding: 10px 15px;
+  background-color: #673ab7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all 0.3s;
+}
+
+.load-later-btn:hover {
+  background-color: #5e35b1;
+  transform: scale(1.05);
+}
+
+/* RTL Support */
+html[dir="rtl"] #language-button {
+  right: auto;
+  left: 10px;
+}
+
+html[dir="rtl"] #welcome-message {
+  left: auto;
+  right: 10px;
+}
+
+html[dir="rtl"] #top-buttons {
+  left: auto;
+  right: 10px;
+  flex-direction: row-reverse;
+}
+
+/* Animation Effects */
+.save-pulse {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.load-flash {
+  animation: flash 0.5s ease-out;
+}
+
+@keyframes flash {
+  0% { background-color: rgba(103, 58, 183, 0.3); }
+  100% { background-color: transparent; }
 }
 
 /* Responsive Design */
@@ -396,22 +454,12 @@ html[dir="rtl"] #top-buttons {
     padding: 6px 10px;
     font-size: 12px;
   }
-}
-.save-pulse {
-  animation: pulse 0.5s ease-in-out;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-.load-flash {
-  animation: flash 0.5s ease-out;
-}
-
-@keyframes flash {
-  0% { background-color: rgba(103, 58, 183, 0.3); }
-  100% { background-color: transparent; }
+  
+  #top-buttons {
+    top: 40px;
+  }
+  
+  html[dir="rtl"] #top-buttons {
+    flex-direction: column-reverse;
+  }
 }

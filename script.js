@@ -57,13 +57,14 @@ const translations = {
     donate: "Donate",
     language: "العربية",
     save: "Save Game",
-    saved: "Game Saved!",
+    saved: "Game Saved Successfully!",
     load: "Game Loaded!",
     noSave: "No saved game found",
-    saveError: "Save failed (storage full?)",
+    saveError: "Save failed (storage full or not supported)",
     loadError: "Corrupted save data",
     confirmLoad: "Load saved game?",
-    confirmReset: "Reset all progress?"
+    confirmReset: "Reset all progress?",
+    storageError: "LocalStorage not supported in your browser!"
   },
   ar: {
     welcome: "مرحبًا بكم في صيد الصور ماينكرافت!",
@@ -84,19 +85,19 @@ const translations = {
     donate: "تبرع",
     language: "English",
     save: "حفظ اللعبة",
-    saved: "تم حفظ اللعبة!",
+    saved: "تم الحفظ بنجاح!",
     load: "تم تحميل اللعبة!",
     noSave: "لا يوجد حفظ سابق",
-    saveError: "فشل الحفظ (التخزين ممتلئ؟)",
+    saveError: "خطأ في الحفظ (قد يكون التخزين ممتلئاً أو غير مدعوم)",
     loadError: "بيانات الحفظ تالفة",
     confirmLoad: "تحميل اللعبة المحفوظة؟",
-    confirmReset: "إعادة تعيين كل التقدم؟"
+    confirmReset: "إعادة تعيين كل التقدم؟",
+    storageError: "المتصفح لا يدعم خاصية الحفظ المحلي!"
   }
 };
 
 // DOM Elements
 const elements = {
-  // Game Elements
   photoImage: document.getElementById('photo-image'),
   photoHP: document.getElementById('photo-hp'),
   clickDamage: document.getElementById('click-damage'),
@@ -106,8 +107,6 @@ const elements = {
   messageDisplay: document.getElementById('message-display'),
   welcomeMessage: document.getElementById('welcome-message'),
   gameContainer: document.getElementById('game-container'),
-  
-  // Buttons
   upgradeButton: document.getElementById('upgrade-button'),
   critChanceButton: document.getElementById('crit-chance-button'),
   critDamageButton: document.getElementById('crit-damage-button'),
@@ -121,14 +120,19 @@ const elements = {
   donateButton: document.getElementById('donate-button'),
   saveButton: document.getElementById('save-button'),
   languageButton: document.getElementById('language-button'),
-  
-  // Audio
   damageSound: document.getElementById('damage-sound'),
   bgMusic: document.getElementById('bg-music')
 };
 
 // Initialize the Game
 function initGame() {
+  // Check for localStorage support
+  if(!isLocalStorageSupported()) {
+    showMessage(translations[currentLanguage].storageError);
+    elements.saveButton.disabled = true;
+    return;
+  }
+
   // Load saved preferences
   loadPreferences();
   
@@ -146,6 +150,18 @@ function initGame() {
   checkForSavedGame();
 }
 
+// Check if localStorage is supported
+function isLocalStorageSupported() {
+  try {
+    const testKey = 'test';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
 // Load user preferences from localStorage
 function loadPreferences() {
   const savedLanguage = localStorage.getItem('gameLanguage');
@@ -161,7 +177,6 @@ function initAudio() {
   elements.bgMusic.volume = 0.3;
   elements.bgMusic.muted = musicMuted;
   
-  // Handle audio context resume
   document.addEventListener('click', function initAudioContext() {
     const playPromise = elements.bgMusic.play();
     
@@ -205,7 +220,7 @@ function addLoadLaterButton() {
   const loadBtn = document.createElement('button');
   loadBtn.id = 'load-later-btn';
   loadBtn.textContent = translations[currentLanguage].load;
-  loadBtn.className = 'load-later-btn';
+  loadBtn.className = 'btn utility-btn';
   
   loadBtn.addEventListener('click', () => {
     loadGame();
@@ -223,7 +238,6 @@ function addLoadLaterButton() {
 
 // Update all game displays
 function updateDisplays() {
-  // Update stats
   elements.photoHP.textContent = `HP: ${photoHP}/${initialHP}`;
   elements.clickDamage.textContent = `${translations[currentLanguage].damage} ${clickDamage}`;
   elements.gold.textContent = `${translations[currentLanguage].gold} ${gold}`;
@@ -251,24 +265,18 @@ function updateDisplays() {
   // Update other buttons
   elements.saveButton.textContent = translations[currentLanguage].save;
   elements.restartButton.textContent = translations[currentLanguage].restart;
+  elements.saveButton.disabled = !isLocalStorageSupported();
 }
 
 // Initialize all event listeners
 function initEventListeners() {
-  // Photo click handler
   elements.photoImage.addEventListener('click', handlePhotoClick);
-
-  // Upgrade buttons
   elements.upgradeButton.addEventListener('click', upgradeDamage);
   elements.critChanceButton.addEventListener('click', upgradeCritChance);
   elements.critDamageButton.addEventListener('click', upgradeCritDamage);
-
-  // Auto-clicker buttons
   elements.autoClickerButton.addEventListener('click', buyAutoClicker);
   elements.autoClickerDmgButton.addEventListener('click', upgradeAutoClickerDamage);
   elements.autoClickerSpeedButton.addEventListener('click', upgradeAutoClickerSpeed);
-
-  // Utility buttons
   elements.fullscreenButton.addEventListener('click', toggleFullscreen);
   elements.muteMusicButton.addEventListener('click', toggleMusic);
   elements.muteSoundButton.addEventListener('click', toggleSound);
@@ -470,7 +478,6 @@ function confirmReset() {
 }
 
 function resetGame() {
-  // Reset all game state
   initialHP = 50;
   photoHP = initialHP;
   clickDamage = 2;
@@ -494,18 +501,18 @@ function resetGame() {
   critChanceCost = 10;
   critDamageCost = 10;
   
-  // Clear auto-clicker
   clearInterval(autoClickerInterval);
-  
-  // Reset image
   elements.photoImage.src = 'fish.jpg';
-  
-  // Update displays
   updateDisplays();
 }
 
 // Save/Load functions
 function saveGame() {
+  if(!isLocalStorageSupported()) {
+    showMessage(translations[currentLanguage].storageError);
+    return;
+  }
+
   const gameState = {
     version: gameVersion,
     timestamp: new Date().toISOString(),
@@ -540,13 +547,22 @@ function saveGame() {
     showMessage(translations[currentLanguage].saved);
     elements.saveButton.classList.add('save-pulse');
     setTimeout(() => elements.saveButton.classList.remove('save-pulse'), 1000);
-  } catch (e) {
+  } catch(e) {
     console.error("Save error:", e);
-    showMessage(translations[currentLanguage].saveError);
+    if(e.name === 'QuotaExceededError') {
+      showMessage(translations[currentLanguage].saveError);
+    } else {
+      showMessage("Error saving game: " + e.message);
+    }
   }
 }
 
 function loadGame() {
+  if(!isLocalStorageSupported()) {
+    showMessage(translations[currentLanguage].storageError);
+    return false;
+  }
+
   const savedGame = localStorage.getItem('minecraftPhotoHuntSave');
   if (!savedGame) {
     showMessage(translations[currentLanguage].noSave);
@@ -556,12 +572,10 @@ function loadGame() {
   try {
     const gameState = JSON.parse(savedGame);
     
-    // Validate save data
     if (!gameState.version || typeof gameState.gold !== 'number') {
       throw new Error("Invalid save data");
     }
 
-    // Load all game state
     initialHP = gameState.initialHP || 50;
     photoHP = gameState.photoHP || initialHP;
     clickDamage = gameState.clickDamage || 2;
@@ -587,23 +601,19 @@ function loadGame() {
     musicMuted = gameState.musicMuted || false;
     soundMuted = gameState.soundMuted || false;
 
-    // Restore auto-clicker if active
     if (autoClickerActive) {
       clearInterval(autoClickerInterval);
       autoClickerInterval = setInterval(autoClickerTick, autoClickerSpeed);
     }
 
-    // Update audio
     elements.bgMusic.muted = musicMuted;
-    
-    // Visual feedback
     elements.gameContainer.classList.add('load-flash');
     setTimeout(() => elements.gameContainer.classList.remove('load-flash'), 500);
     
     updateDisplays();
     showMessage(translations[currentLanguage].load);
     return true;
-  } catch (e) {
+  } catch(e) {
     console.error("Load error:", e);
     showMessage(translations[currentLanguage].loadError);
     return false;
