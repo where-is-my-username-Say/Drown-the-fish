@@ -73,19 +73,6 @@ html, body {
   transform: scale(1.05);
 }
 
-/* Welcome Message */
-#welcome-message {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  color: white;
-  font-size: 16px;
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 8px 15px;
-  border-radius: 5px;
-  z-index: 100;
-}
-
 /* Top Buttons Container */
 #top-buttons {
   position: absolute;
@@ -413,41 +400,6 @@ html[dir="rtl"] #top-buttons {
   0% { background-color: rgba(103, 58, 183, 0.3); }
   100% { background-color: transparent; }
 }
-/* Top Buttons Container */
-#top-buttons {
-  position: absolute;
-  top: 50px;
-  left: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 100;
-  min-width: 120px;
-}
-
-/* Secret Code Container */
-#secret-code-container {
-  position: absolute;
-  top: 150px; /* تحت الأزرار العلوية */
-  left: 10px;
-  background-color: rgba(0, 0, 0, 0.8);
-  padding: 10px;
-  border-radius: 5px;
-  display: flex;
-  gap: 5px;
-  width: 200px;
-  box-sizing: border-box;
-  transition: all 0.3s ease;
-  transform: translateY(-10px);
-  opacity: 0;
-  visibility: hidden;
-}
-
-#secret-code-container.visible {
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible;
-}
 
 #toggle-secret-button {
   background-color: #9c27b0;
@@ -462,20 +414,69 @@ html[dir="rtl"] #top-buttons {
 #toggle-secret-button:hover {
   background-color: #7b1fa2;
   transform: scale(1.05);
+} 
+/* تعديلات على الـ top-buttons */
+#top-buttons {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: row; /* تغيير من column إلى row */
+  gap: 10px;
+  z-index: 100;
+  min-width: auto;
 }
 
-/* Game Container - تأكد من وجود مساحة كافية للأزرار */
+/* تعديل موقع welcome-message */
+#welcome-message {
+  position: absolute;
+  top: 50px; /* نقل إلى أسفل الأزرار */
+  left: 10px;
+  color: white;
+  font-size: 16px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 8px 15px;
+  border-radius: 5px;
+  z-index: 100;
+}
+
+/* تعديل موقع secret-code-container */
+#secret-code-container {
+  position: absolute;
+  top: 50px; /* تحت الأزرار مباشرة */
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  gap: 5px;
+  width: 200px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  transform: translateY(-10px);
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* تعديل موقع game-container لرفع المحتوى */
 #game-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* تغيير من center إلى flex-start */
   height: 100vh;
-  padding-top: 100px; /* إضافة حشوة علوية */
+  padding-top: 120px; /* تقليل الحشوة العلوية */
   box-sizing: border-box;
   gap: 15px;
   background-color: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
-} 
+}
+
+/* تعديلات للغة العربية */
+html[dir="rtl"] #top-buttons {
+  left: auto;
+  right: 10px;
+  flex-direction: row; /* الحفاظ على اتجاه الصف حتى في العربية */
+}
 /* Dead Duck
 }
