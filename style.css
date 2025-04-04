@@ -427,24 +427,31 @@ html[dir="rtl"] #top-buttons {
   0% { background-color: rgba(103, 58, 183, 0.3); }
   100% { background-color: transparent; }
 }
-/* Secret Code Input */
-#secret-input-container {
-  margin-top: 15px;
+/* Secret Code Container */
+#secret-code-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 0 0 5px 5px;
   display: flex;
   gap: 5px;
-  width: 90%;
-  max-width: 350px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  transform: translateY(-10px);
+  opacity: 0;
+  visibility: hidden;
 }
 
-#secret-code-input {
-  flex-grow: 1;
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  text-align: center;
+#secret-code-container.visible {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
 }
 
-#secret-code-button {
+#toggle-secret-button {
   background-color: #9c27b0;
   color: white;
   border: none;
@@ -454,9 +461,21 @@ html[dir="rtl"] #top-buttons {
   transition: all 0.2s;
 }
 
-#secret-code-button:hover {
+#toggle-secret-button:hover {
   background-color: #7b1fa2;
   transform: scale(1.05);
+}
+
+/* Adjust top buttons container */
+#top-buttons {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+  min-width: 120px;
 }
 /* Dead Duck
 }

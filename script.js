@@ -34,7 +34,7 @@ let critDamageCost = 10;
 let musicMuted = false;
 let soundMuted = false;
 let currentLanguage = 'en';
-let gameVersion = '1.2';
+let gameVersion = '1.3';
 
 // Game Translations
 const translations = {
@@ -68,7 +68,8 @@ const translations = {
     secretPlaceholder: "Enter secret code here",
     secretButton: "Activate",
     secretSuccess: "Secret code activated! +10,000 gold!",
-    secretFail: "Invalid secret code!"
+    secretFail: "Invalid secret code!",
+    toggleSecret: "Secret Code"
   },
   ar: {
     welcome: "اهلا يا متخلف!",
@@ -76,7 +77,7 @@ const translations = {
     gold: "قطع ذهبية:",
     critChance: "كريت ريت:",
     critMultiplier: "كريت دمج:",
-    upgrade: "طور",
+    upgrade: "ط��ر",
     critChanceUpgrade: "كريت ريت",
     critDamageUpgrade: "كريت دمج",
     autoClicker: "اوتو كليكر للضعفاء",
@@ -100,7 +101,8 @@ const translations = {
     secretPlaceholder: "اكتب كلمة السر هنا",
     secretButton: "تفعيل",
     secretSuccess: "تم تفعيل الكود السري! +10,000 ذهب!",
-    secretFail: "كود سري خاطئ!"
+    secretFail: "كود سري خاطئ!",
+    toggleSecret: "كود سري"
   }
 };
 
@@ -131,6 +133,8 @@ const elements = {
   damageSound: document.getElementById('damage-sound'),
   bgMusic: document.getElementById('bg-music'),
   explosionSound: document.getElementById('explosion-sound'),
+  toggleSecretButton: document.getElementById('toggle-secret-button'),
+  secretCodeContainer: document.getElementById('secret-code-container'),
   secretCodeInput: document.getElementById('secret-code-input'),
   secretCodeButton: document.getElementById('secret-code-button')
 };
@@ -267,6 +271,7 @@ function updateDisplays() {
   elements.saveButton.textContent = translations[currentLanguage].save;
   elements.restartButton.textContent = translations[currentLanguage].restart;
   elements.saveButton.disabled = !isLocalStorageSupported();
+  elements.toggleSecretButton.textContent = translations[currentLanguage].toggleSecret;
 
   // Update secret code elements
   elements.secretCodeInput.placeholder = translations[currentLanguage].secretPlaceholder;
@@ -288,7 +293,18 @@ function initEventListeners() {
   elements.restartButton.addEventListener('click', confirmReset);
   elements.saveButton.addEventListener('click', saveGame);
   elements.languageButton.addEventListener('click', toggleLanguage);
+  elements.toggleSecretButton.addEventListener('click', toggleSecretCode);
   elements.secretCodeButton.addEventListener('click', checkSecretCode);
+}
+
+// Toggle secret code input
+function toggleSecretCode() {
+  elements.secretCodeContainer.classList.toggle('visible');
+  
+  // Focus input when shown
+  if (elements.secretCodeContainer.classList.contains('visible')) {
+    setTimeout(() => elements.secretCodeInput.focus(), 300);
+  }
 }
 
 // Secret code function
@@ -298,6 +314,7 @@ function checkSecretCode() {
   if (secretCode === "السلمندر جميل") {
     gold += 10000;
     elements.secretCodeInput.value = "";
+    elements.secretCodeContainer.classList.remove('visible');
     showMessage(translations[currentLanguage].secretSuccess);
     updateDisplays();
   } else {
@@ -541,6 +558,7 @@ function resetGame() {
   
   clearInterval(autoClickerInterval);
   elements.photoImage.src = 'fish.jpg';
+  elements.secretCodeContainer.classList.remove('visible');
   updateDisplays();
 }
 
@@ -645,6 +663,7 @@ function loadGame() {
     }
 
     elements.photoImage.src = photoDefeated ? 'deadduck.jpg' : 'fish.jpg';
+    elements.secretCodeContainer.classList.remove('visible');
     
     elements.bgMusic.muted = musicMuted;
     elements.gameContainer.classList.add('load-flash');
