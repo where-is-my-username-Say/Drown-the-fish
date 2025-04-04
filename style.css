@@ -79,7 +79,8 @@ html, body {
   object-fit: cover;
   background-color: #2a2a2a;
   aspect-ratio: 1/1;
-  transform: translateZ(0); /* Hardware acceleration */
+  transform: translateZ(0);
+  margin-top: 20px;
 }
 
 #photo-image:hover {
@@ -160,6 +161,51 @@ html, body {
   min-width: 100px;
 }
 
+/* Modern Stats Container */
+#stats-container {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  border-radius: var(--border-radius);
+  padding: 18px;
+  width: 90%;
+  max-width: 320px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modern Buttons Grid - Updated to 3x3 */
+#buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 95%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.btn {
+  padding: 12px 8px;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: var(--transition-medium);
+  min-width: 90px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.3;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+/* باقي الأكواد تبقى كما هي */
+}
+
 #donate-button {
   background-color: #ff5722;
 }
@@ -224,26 +270,6 @@ html, body {
 }
 
 /* Modern Stats Container */
-#stats-container {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  border-radius: var(--border-radius);
-  padding: 18px;
-  width: 90%;
-  max-width: 320px;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  color: var(--text-light);
-  font-size: 17px;
-  margin: 10px 0;
-  padding-bottom: 5px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
 
 .stat-row span:last-child {
   font-weight: bold;
@@ -260,37 +286,6 @@ html, body {
 
 #crit-multiplier {
   color: #ff3300;
-}
-
-/* Modern Buttons Grid */
-#buttons-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 10px;
-  width: 95%;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-/* Enhanced Button Styles */
-.btn {
-  padding: 12px 8px;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
-  transition: var(--transition-medium);
-  min-width: 90px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  line-height: 1.3;
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
 }
 
 .btn::after {
