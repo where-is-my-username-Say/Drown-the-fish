@@ -7,38 +7,53 @@
   <link href="style.css" rel="stylesheet" type="text/css">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#ff5722">
-  <!-- Preload duck images for instant transitions -->
+  <!-- Preload resources for better performance -->
   <link rel="preload" href="fish.jpg" as="image">
   <link rel="preload" href="deadduck.jpg" as="image">
   <link rel="preload" href="being_attacked.jpg" as="image">
+  <link rel="preload" href="exp.mp3" as="audio">
+  <link rel="preload" href="dmg.mp3" as="audio">
+  <link rel="preload" href="BG.mp3" as="audio">
 </head>
 <body>
+  <!-- Background Video -->
   <div id="minecraft-background">
-    <video autoplay muted loop>
+    <video autoplay muted loop playsinline>
       <source src="BGV.mp4" type="video/mp4">
+      Your browser does not support the video tag.
     </video>
   </div>
 
+  <!-- Language Switcher -->
   <div id="language-switcher">
-    <button id="language-button">العربية</button>
+    <button id="language-button" aria-label="Switch language">العربية</button>
   </div>
 
+  <!-- Game Container -->
   <div id="game-container">
+    <!-- Welcome Message -->
     <div id="welcome-message">Welcome to Duck Hunt!</div>
-<div id="top-buttons">
-  <a id="donate-button" href="https://tip.dokan.sa/zookoomaan_2004869" target="_blank">Donate</a>
-  <button id="save-button">Save Game</button>
-  <button id="toggle-secret-button">Secret Code</button>
-</div>
-<div id="secret-code-container" class="hidden">
-  <input type="text" id="secret-code-input" placeholder="اكتب كلمة السر هنا">
-  <button id="secret-code-button">تفعيل</button>
-</div>
+    
+    <!-- Top Action Buttons -->
+    <div id="top-buttons">
+      <a id="donate-button" href="https://tip.dokan.sa/zookoomaan_2004869" target="_blank" rel="noopener noreferrer">Donate</a>
+      <button id="save-button" aria-label="Save game progress">Save Game</button>
+      <button id="toggle-secret-button" aria-label="Toggle secret code input">Secret Code</button>
+    </div>
+    
+    <!-- Secret Code Input (Hidden by default) -->
+    <div id="secret-code-container" class="hidden">
+      <input type="text" id="secret-code-input" placeholder="Enter secret code here" aria-label="Secret code input">
+      <button id="secret-code-button" aria-label="Activate secret code">Activate</button>
+    </div>
+
+    <!-- Duck Image and HP -->
     <div id="photo-container">
-      <img id="photo-image" src="fish.jpg" alt="Clickable Duck" width="200" height="200">
+      <img id="photo-image" src="fish.jpg" alt="Clickable Duck" width="200" height="200" draggable="false">
       <div id="photo-hp">HP: 50</div>
     </div>
 
+    <!-- Game Stats -->
     <div id="stats-container">
       <div class="stat-row">
         <span>Damage:</span>
@@ -58,24 +73,33 @@
       </div>
     </div>
 
+    <!-- Game Controls Grid -->
     <div id="buttons-grid">
-      <button id="upgrade-button" class="btn upgrade-btn">Upgrade (2 Gold)</button>
-      <button id="crit-chance-button" class="btn upgrade-btn">Crit Chance (10 Gold)</button>
-      <button id="crit-damage-button" class="btn upgrade-btn">Crit Damage (10 Gold)</button>
-      <button id="auto-clicker-button" class="btn auto-clicker-btn">Auto-Clicker (50 Gold)</button>
-      <button id="auto-clicker-dmg-button" class="btn auto-clicker-btn">AC Damage (25 Gold)</button>
-      <button id="auto-clicker-speed-button" class="btn auto-clicker-btn">AC Speed (30 Gold)</button>
-      <button id="fullscreen-button" class="btn utility-btn">Fullscreen</button>
-      <button id="mute-music-button" class="btn utility-btn">Toggle Music</button>
-      <button id="mute-sound-button" class="btn utility-btn">Toggle Sound</button>
-      <button id="restart-button" class="btn restart-btn">Restart</button>
+      <button id="upgrade-button" class="btn upgrade-btn" aria-label="Upgrade damage">Upgrade (2 Gold)</button>
+      <button id="crit-chance-button" class="btn upgrade-btn" aria-label="Upgrade critical chance">Crit Chance (10 Gold)</button>
+      <button id="crit-damage-button" class="btn upgrade-btn" aria-label="Upgrade critical damage">Crit Damage (10 Gold)</button>
+      <button id="auto-clicker-button" class="btn auto-clicker-btn" aria-label="Buy auto-clicker">Auto-Clicker (50 Gold)</button>
+      <button id="auto-clicker-dmg-button" class="btn auto-clicker-btn" aria-label="Upgrade auto-clicker damage">AC Damage (25 Gold)</button>
+      <button id="auto-clicker-speed-button" class="btn auto-clicker-btn" aria-label="Upgrade auto-clicker speed">AC Speed (30 Gold)</button>
+      <button id="fullscreen-button" class="btn utility-btn" aria-label="Toggle fullscreen">Fullscreen</button>
+      <button id="mute-music-button" class="btn utility-btn" aria-label="Toggle music">Toggle Music</button>
+      <button id="mute-sound-button" class="btn utility-btn" aria-label="Toggle sound effects">Toggle Sound</button>
+      <button id="restart-button" class="btn restart-btn" aria-label="Restart game">Restart</button>
     </div>
   </div>
 
-  <div id="message-display"></div>
-<audio id="explosion-sound" src="exp.mp3" preload="auto"></audio>
+  <!-- Message Display Area -->
+  <div id="message-display" aria-live="polite"></div>
+  
+  <!-- Audio Elements -->
+  <audio id="explosion-sound" src="exp.mp3" preload="auto"></audio>
   <audio id="damage-sound" src="dmg.mp3" preload="auto"></audio>
   <audio id="bg-music" src="BG.mp3" loop preload="auto"></audio>
+  
+  <!-- Install Button (Dynamically added by JS) -->
+  <button id="install-btn" class="hidden" aria-label="Install game as app">Install Game</button>
+  
+  <!-- Game Script -->
   <script src="script.js"></script>
 </body>
 </html>
