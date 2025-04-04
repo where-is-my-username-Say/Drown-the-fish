@@ -427,6 +427,36 @@ html[dir="rtl"] #top-buttons {
   0% { background-color: rgba(103, 58, 183, 0.3); }
   100% { background-color: transparent; }
 }
+/* Secret Code Input */
+#secret-input-container {
+  margin-top: 15px;
+  display: flex;
+  gap: 5px;
+  width: 90%;
+  max-width: 350px;
+}
 
+#secret-code-input {
+  flex-grow: 1;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+#secret-code-button {
+  background-color: #9c27b0;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#secret-code-button:hover {
+  background-color: #7b1fa2;
+  transform: scale(1.05);
+}
 /* Dead Duck
 }

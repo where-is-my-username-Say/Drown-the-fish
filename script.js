@@ -64,7 +64,11 @@ const translations = {
     loadError: "Corrupted save data",
     confirmLoad: "Load saved game?",
     confirmReset: "Reset all progress?",
-    storageError: "LocalStorage not supported in your browser!"
+    storageError: "LocalStorage not supported in your browser!",
+    secretPlaceholder: "Enter secret code here",
+    secretButton: "Activate",
+    secretSuccess: "Secret code activated! +10,000 gold!",
+    secretFail: "Invalid secret code!"
   },
   ar: {
     welcome: "اهلا يا متخلف!",
@@ -92,7 +96,11 @@ const translations = {
     loadError: "بيانات الحفظ تالفة",
     confirmLoad: "تحميل اللعبة المحفوظة؟",
     confirmReset: "إعادة تعيين كل التقدم؟",
-    storageError: "المتصفح لا يدعم خاصية الحفظ المحلي!"
+    storageError: "المتصفح لا يدعم خاصية الحفظ المحلي!",
+    secretPlaceholder: "اكتب كلمة السر هنا",
+    secretButton: "تفعيل",
+    secretSuccess: "تم تفعيل الكود السري! +10,000 ذهب!",
+    secretFail: "كود سري خاطئ!"
   }
 };
 
@@ -121,7 +129,10 @@ const elements = {
   saveButton: document.getElementById('save-button'),
   languageButton: document.getElementById('language-button'),
   damageSound: document.getElementById('damage-sound'),
-  bgMusic: document.getElementById('bg-music')
+  bgMusic: document.getElementById('bg-music'),
+  explosionSound: document.getElementById('explosion-sound'),
+  secretCodeInput: document.getElementById('secret-code-input'),
+  secretCodeButton: document.getElementById('secret-code-button')
 };
 
 // Initialize the Game
@@ -256,6 +267,10 @@ function updateDisplays() {
   elements.saveButton.textContent = translations[currentLanguage].save;
   elements.restartButton.textContent = translations[currentLanguage].restart;
   elements.saveButton.disabled = !isLocalStorageSupported();
+
+  // Update secret code elements
+  elements.secretCodeInput.placeholder = translations[currentLanguage].secretPlaceholder;
+  elements.secretCodeButton.textContent = translations[currentLanguage].secretButton;
 }
 
 // Initialize all event listeners
@@ -273,6 +288,21 @@ function initEventListeners() {
   elements.restartButton.addEventListener('click', confirmReset);
   elements.saveButton.addEventListener('click', saveGame);
   elements.languageButton.addEventListener('click', toggleLanguage);
+  elements.secretCodeButton.addEventListener('click', checkSecretCode);
+}
+
+// Secret code function
+function checkSecretCode() {
+  const secretCode = elements.secretCodeInput.value.trim();
+  
+  if (secretCode === "السلمندر جميل") {
+    gold += 10000;
+    elements.secretCodeInput.value = "";
+    showMessage(translations[currentLanguage].secretSuccess);
+    updateDisplays();
+  } else {
+    showMessage(translations[currentLanguage].secretFail);
+  }
 }
 
 // Photo click handler with duck image transitions
@@ -308,17 +338,23 @@ function handlePhotoClick(event) {
     if (!photoDefeated) {
       elements.photoImage.src = 'fish.jpg';
     }
-  }, 370);
+  }, 100);
 }
 
 // Handle photo defeat with dead duck image
 function handlePhotoDefeat() {
   photoHP = 0;
   photoDefeated = true;
-  elements.photoImage.src = 'deadduck.jpg'; // Show dead duck
+  elements.photoImage.src = 'deadduck.jpg';
   const goldEarned = Math.floor(initialHP / 2);
   gold += goldEarned;
   totalGoldEarned += goldEarned;
+  
+  // Play explosion sound
+  if (!soundMuted) {
+    elements.explosionSound.currentTime = 0;
+    elements.explosionSound.play().catch(e => console.log("Explosion sound error:", e));
+  }
   
   showMessage(currentLanguage === 'en' ? 
     `You earned ${goldEarned} gold!` : 
@@ -328,7 +364,7 @@ function handlePhotoDefeat() {
     initialHP += hpIncrement;
     photoHP = initialHP;
     photoDefeated = false;
-    elements.photoImage.src = 'fish.jpg'; // Return to normal duck
+    elements.photoImage.src = 'fish.jpg';
     updateDisplays();
   }, 2000);
 }
@@ -504,7 +540,7 @@ function resetGame() {
   critDamageCost = 10;
   
   clearInterval(autoClickerInterval);
-  elements.photoImage.src = 'fish.jpg'; // Reset to normal duck
+  elements.photoImage.src = 'fish.jpg';
   updateDisplays();
 }
 
@@ -608,7 +644,6 @@ function loadGame() {
       autoClickerInterval = setInterval(autoClickerTick, autoClickerSpeed);
     }
 
-    // Set correct duck image based on state
     elements.photoImage.src = photoDefeated ? 'deadduck.jpg' : 'fish.jpg';
     
     elements.bgMusic.muted = musicMuted;
@@ -668,33 +703,6 @@ window.addEventListener('appinstalled', () => {
   const installBtn = document.getElementById('install-btn');
   if (installBtn) installBtn.remove();
 });
-function handlePhotoDefeat() {
-  photoHP = 0;
-  photoDefeated = true;
-  elements.photoImage.src = 'deadduck.jpg'; // Show dead duck
-  const goldEarned = Math.floor(initialHP / 2);
-  gold += goldEarned;
-  totalGoldEarned += goldEarned;
-  
-  // Play explosion sound
-  if (!soundMuted) {
-    const explosionSound = document.getElementById('explosion-sound');
-    explosionSound.currentTime = 0;
-    explosionSound.play().catch(e => console.log("Explosion sound error:", e));
-  }
-  
-  showMessage(currentLanguage === 'en' ? 
-    `You earned ${goldEarned} gold!` : 
-    `لقد ربحت ${goldEarned} ذهب!`);
-  
-  setTimeout(() => {
-    initialHP += hpIncrement;
-    photoHP = initialHP;
-    photoDefeated = false;
-    elements.photoImage.src = 'fish.jpg'; // Return to normal duck
-    updateDisplays();
-  }, 2000);
-}
 
 // Start the game
 initGame();
