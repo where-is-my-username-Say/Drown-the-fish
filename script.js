@@ -297,24 +297,28 @@ function initEventListeners() {
   elements.secretCodeButton.addEventListener('click', checkSecretCode);
 }
 
-// Toggle secret code input
+// في قسم initEventListeners()
+elements.toggleSecretButton.addEventListener('click', toggleSecretCode);
+elements.secretCodeButton.addEventListener('click', checkSecretCode);
+
+// وظيفة toggleSecretCode
 function toggleSecretCode() {
-  elements.secretCodeContainer.classList.toggle('visible');
+  elements.secretCodeContainer.classList.toggle('hidden');
   
   // Focus input when shown
-  if (elements.secretCodeContainer.classList.contains('visible')) {
-    setTimeout(() => elements.secretCodeInput.focus(), 300);
+  if (!elements.secretCodeContainer.classList.contains('hidden')) {
+    setTimeout(() => elements.secretCodeInput.focus(), 100);
   }
 }
 
-// Secret code function
+// وظيفة checkSecretCode
 function checkSecretCode() {
   const secretCode = elements.secretCodeInput.value.trim();
   
   if (secretCode === "السلمندر جميل") {
     gold += 10000;
     elements.secretCodeInput.value = "";
-    elements.secretCodeContainer.classList.remove('visible');
+    elements.secretCodeContainer.classList.add('hidden');
     showMessage(translations[currentLanguage].secretSuccess);
     updateDisplays();
   } else {
@@ -722,6 +726,15 @@ window.addEventListener('appinstalled', () => {
   const installBtn = document.getElementById('install-btn');
   if (installBtn) installBtn.remove();
 });
+function toggleSecretCode() {
+  console.log("Toggle secret code clicked");
+  elements.secretCodeContainer.classList.toggle('hidden');
+  // باقي الكود...
+}
 
+function checkSecretCode() {
+  console.log("Check secret code clicked");
+  // باقي الكود...
+}
 // Start the game
 initGame();

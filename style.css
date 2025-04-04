@@ -478,5 +478,8 @@ html[dir="rtl"] #top-buttons {
   right: 10px;
   flex-direction: row; /* الحفاظ على اتجاه الصف حتى في العربية */
 }
+.hidden {
+  display: none;
+}
 /* Dead Duck
 }
